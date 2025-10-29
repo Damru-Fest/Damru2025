@@ -7,8 +7,8 @@ export default function Events() {
             </button>
 
             {/* card */}
-            <div className="flex flex-col h-screen w-screen content-center items-center justify-center">
-                <h1 className="text-9xl text-amber-300">Coming Soon</h1>
+            <div className="flex flex-col content-center items-center justify-center" style={{height:'80vh'}}>
+                <h1 className="md:text-9xl text-8xl text-center text-amber-300">Coming Soon</h1>
 
 
             </div>
