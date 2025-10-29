@@ -18,6 +18,7 @@ export const AuthProvider = ({ children }) => {
       }
       return true;
     } catch (err) {
+      console.log("caught");
       setUser(null);
       return false;
     }
@@ -38,37 +39,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const caSubmit = async (data) => {
-    try {
-      const response = await axiosInstance.post("/auth/caForm", data);
-      // Update app state to reflect successful submission
-      setApp(true);
-      return { success: true, data: response.data };
-    } catch (err) {
-      console.error("Error submitting CA form:", err);
-      return {
-        success: false,
-        error: err.response?.data?.message || "Failed to submit application",
-      };
-    }
-  };
-
-  const caGet = async () => {
-    try {
-      const response = await axiosInstance.get("/auth/caForm");
-      if (response?.data?.message === "Application found") {
-        setApp(true);
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
   useEffect(() => {
     const initializeAuth = async () => {
       try {
         await getMe();
-        await caGet();
       } catch (error) {
         console.error("Failed to initialize auth:", error);
       } finally {
@@ -85,7 +59,6 @@ export const AuthProvider = ({ children }) => {
         user,
         loading,
         setLoading,
-        caSubmit,
         app,
         logout,
         refreshAuth: getMe,
