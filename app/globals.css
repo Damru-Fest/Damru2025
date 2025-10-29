@@ -4,11 +4,11 @@
 
 @font-face {
   font-family: 'Kamal';
-  src: url("/font/Kamal.woff2");
+  src: url("/font/Kamal.ttf");
 }
  
 body {
-  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+  font-family: 'Kamal',"Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, sans-serif;
   font-variant-numeric: lining-nums tabular-nums;
 }
