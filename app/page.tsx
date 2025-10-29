@@ -1,12 +1,11 @@
 import React from 'react'
 import Landing from './landing/page'
 
-const page = () => {
+import Image from "next/image";
+export default function Home() {
   return (
     <div>
       <Landing/>
     </div>
   )
 }
-
-export default page
