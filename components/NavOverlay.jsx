@@ -16,7 +16,7 @@ export default function NavOverlay({ open = false, onClose = () => {} }) {
     <div
       id="nav-overlay"
       aria-hidden={!open}
-      className={`fixed inset-0 z-40 flex items-start justify-center overflow-hidden transition-all duration-500 ease-out ${
+      className={`fixed inset-0 z-99 flex items-start justify-center overflow-hidden transition-all duration-500 ease-out ${
         open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       }`}
     >

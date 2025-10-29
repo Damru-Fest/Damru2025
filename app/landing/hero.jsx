@@ -1,7 +1,7 @@
 "use client"
-
+import Link from "next/link"
 import React, { useState } from "react"
-import NavOverlay from "../../components/NavOverlay"
+import NavOverlay from "../../components/navOverlay"
 
 export default function Hero() {
   const [open, setOpen] = useState(false)
@@ -27,8 +27,14 @@ export default function Hero() {
         <img src="/assets/Damru-logo.svg" alt="Damru" className="w-26 md:w-30" />
       </a>
 
-      {/* Hero content (centered) */}
-      
+     <div className="absolute top-4 right-4 z-20">
+         <Link
+           href="/register"
+           className="inline-flex items-center justify-center rounded-full bg-white/95 text-[#1a1a1a] px-5 py-2 md:px-6 md:py-2.5 text-base md:text-l  border border-black/10 hover:scale-[1.03] hover:shadow-lg hover:bg-white transition-transform duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+         >
+           Register now
+         </Link>
+       </div>      
 
       {/* Menu button bottom-right (pill with wheel + text) */}
       <div className="absolute z-20 bottom-4 right-4">
