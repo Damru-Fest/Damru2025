@@ -1,17 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@font-face {
-  font-family: 'WsParadose';
-  src: url("/font/WsParadose.ttf");
-}
-@font-face {
-  font-family: 'Kamal';
-  src: url("/font/Kamal.woff2");
-}
- 
 body {
-  font-family: 'WsParadose','Kamal', sans-serif;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 @custom-variant dark (&:is(.dark *));
 
@@ -130,5 +123,25 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Ensure numbers display correctly */
+  input,
+  textarea,
+  .numeric,
+  [type="number"],
+  time,
+  .time,
+  .date {
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  /* Fix for any numeric content */
+  .font-mono,
+  code,
+  pre {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas,
+      "Liberation Mono", "Courier New", monospace;
   }
 }
