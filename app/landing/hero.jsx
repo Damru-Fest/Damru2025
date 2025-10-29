@@ -1,7 +1,7 @@
-"use client";
-import Link from "next/link";
-import React, { useState } from "react";
-import NavOverlay from "../../components/NavOverlay";
+"use client"
+import Link from "next/link"
+import React, { useState } from "react"
+import NavOverlay from "../../components/NavOverlay"
 
 export default function Hero() {
   const [open, setOpen] = useState(false);
