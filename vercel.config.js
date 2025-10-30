@@ -1,6 +1,0 @@
-// vercel.config.js
-module.exports = {
-  version: 2,
-  builds: [{ src: "next.config.js", use: "@vercel/next" }],
-  rewrites: [{ source: "/api/:path*", destination: "/api/:path*" }],
-};
