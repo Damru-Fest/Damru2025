@@ -9,8 +9,8 @@ const Footer = () => {
         <div className="flex items-center gap-8 w-1/2">
           <img src={logoUrl} alt="Damru Logo" className="h-16 w-auto" />
           <div className="text-sm">
-            <p className="mb-1">© Damru 2025. All rights reserved</p>
-            <div>
+            <p className="">© Damru 2025. All rights reserved</p>
+            {/* <div>
               <a
                 href="/terms"
                 className="underline hover:text-gray-300 transition-colors"
@@ -24,7 +24,7 @@ const Footer = () => {
               >
                 Privacy Policy
               </a>
-            </div>
+            </div> */}
           </div>
         </div>
 
