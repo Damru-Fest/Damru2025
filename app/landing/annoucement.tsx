@@ -58,7 +58,7 @@ export default function Announcement(){
             {/* header */}
             <div className="flex flex-row justify-between">
                 <img src="./assets/flowerImage.svg" className="relative sm:-top-30 -top-15 lg:w-auto sm:w-60 w-30" alt="flower" 
-                style={{ animation: 'spin 15s linear infinite' }}
+                style={{ animation: 'spin 25s linear infinite' }}
                 />
 
                 <img src="./assets/RightFlower.svg" data-aos="fade-left" className="relative sm:-top-30 -top-15 sm:w-auto w-40" alt="right flower" />
@@ -102,11 +102,7 @@ export default function Announcement(){
                     <img src="./assets/RightfullFlower.svg" className="absolute lg:right-5 right-5 -top-50 lg:w-100 w-0 sm:w-60" alt="" />
                     
                 </div>
-
-                
             </div>
-
-            {/* footer */}
             <img src="./assets/LeftFlower.svg" data-aos="fade-right" className="relative lg:-top-60 sm:-top-40 -bottom-7 sm:w-auto w-40" alt="right flower" />
             
             

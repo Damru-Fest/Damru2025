@@ -5,7 +5,7 @@ import Link from 'next/link'
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { useEffect } from 'react';
-
+import { motion } from 'framer-motion';
 const EventsCompetitions = () => {
   useEffect(() => {
     AOS.init({

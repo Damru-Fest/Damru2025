@@ -96,7 +96,7 @@
 
 import Link from "next/link"
 import React, { useState, useEffect, useRef } from "react"
-import NavOverlay from "../../components/navOverlay"
+import NavOverlay from "../../components/NavOverlay"
 
 export default function Hero() {
   const [open, setOpen] = useState(false)
