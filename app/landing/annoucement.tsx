@@ -103,7 +103,7 @@ export default function Announcement(){
                     
                 </div>
             </div>
-            <img src="./assets/LeftFlower.svg" data-aos="fade-right" className="relative lg:-top-60 sm:-top-40 -bottom-7 sm:w-auto w-40" alt="right flower" />
+            <img src="./assets/leftFlower.svg" data-aos="fade-right" className="relative lg:-top-60 sm:-top-40 -bottom-7 sm:w-auto w-40" alt="right flower" />
             
             
         </div>

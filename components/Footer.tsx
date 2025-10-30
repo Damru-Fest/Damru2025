@@ -4,7 +4,7 @@ const logoUrl = "/assets/Damru-logo.svg";
 
 const Footer = () => {
   return (
-    <footer className="bg-black text-white w-full h-[40vh]">
+    <footer className="bg-black text-white w-full h-[20vh]">
       <div className="container mx-auto flex justify-between items-center px-8 h-full">
         <div className="flex items-center gap-8 w-1/2">
           <img src={logoUrl} alt="Damru Logo" className="h-16 w-auto" />
