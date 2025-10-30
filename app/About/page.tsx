@@ -1,4 +1,4 @@
-export default function Competitions() {
+export default function About() {
     return(
         <div className="w-screen h-screen p-10" style={{background:'url("./assets/EventBg.svg")',backgroundSize:'cover',backgroundRepeat:'no-repeat'}}>
             <button className="flex  flex-row justify-center items-center bg-[#F99E00] p-1  w-60 gap-5 rounded-4xl">
