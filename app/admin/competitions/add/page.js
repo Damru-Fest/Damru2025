@@ -25,10 +25,12 @@ export default function AddCompetition() {
   const [competition, setCompetition] = useState({
     title: "",
     description: "",
+    type: "SOLO", // SOLO, TEAM
+    minTeamSize: null,
+    maxTeamSize: null,
     registrationFee: 0,
     registrationDeadline: "",
     registrationTime: "",
-    teamSize: 1,
     otherRewards: "",
   });
 
@@ -66,10 +68,25 @@ export default function AddCompetition() {
 
   // Handle competition field changes
   const handleCompetitionChange = (field, value) => {
-    setCompetition((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setCompetition((prev) => {
+      const updated = {
+        ...prev,
+        [field]: value,
+      };
+      
+      // Auto-adjust team sizes when type changes
+      if (field === "type") {
+        if (value === "SOLO") {
+          updated.minTeamSize = null;
+          updated.maxTeamSize = null;
+        } else if (value === "TEAM" && (prev.minTeamSize === null || prev.maxTeamSize === null)) {
+          updated.minTeamSize = 2;
+          updated.maxTeamSize = 5;
+        }
+      }
+      
+      return updated;
+    });
   };
 
   // Handle file changes
@@ -138,7 +155,11 @@ export default function AddCompetition() {
       return "Registration deadline date is required";
     if (!competition.registrationTime)
       return "Registration deadline time is required";
-    if (competition.teamSize < 1) return "Team size must be at least 1";
+    // Team size validation only for TEAM type
+    if (competition.type === "TEAM") {
+      if (!competition.minTeamSize || competition.minTeamSize < 1) return "Min team size must be at least 1 for team competitions";
+      if (!competition.maxTeamSize || competition.maxTeamSize < competition.minTeamSize) return "Max team size must be greater than or equal to min team size";
+    }
     if (!files.detailsMd) return "Markdown file is required";
 
     // Validate stages
@@ -183,11 +204,18 @@ export default function AddCompetition() {
       // Add basic competition data
       formData.append("title", competition.title);
       formData.append("description", competition.description);
+      formData.append("type", competition.type);
+      
+      // Only add team sizes for TEAM type competitions
+      if (competition.type === "TEAM") {
+        formData.append("minTeamSize", parseInt(competition.minTeamSize));
+        formData.append("maxTeamSize", parseInt(competition.maxTeamSize));
+      }
+      
       formData.append(
         "registrationFee",
         parseFloat(competition.registrationFee)
       );
-      formData.append("teamSize", parseInt(competition.teamSize));
       formData.append(
         "registrationDeadline",
         combineDateTime(
@@ -213,13 +241,15 @@ export default function AddCompetition() {
         formData.append("prizes", JSON.stringify(prizes));
       }
 
-      // Add stages
+      // Add stages - remove startTime and endTime as they're combined with dates
       const stagesData = stages.map((stage) => ({
-        ...stage,
+        roundNumber: stage.roundNumber,
+        roundTitle: stage.roundTitle,
+        roundDesc: stage.roundDesc,
         startDate: combineDateTime(stage.startDate, stage.startTime),
         endDate: combineDateTime(stage.endDate, stage.endTime),
       }));
-      formData.append("stagesAndTimelines", JSON.stringify(stagesData));
+      formData.append("stages", JSON.stringify(stagesData));
 
       await axiosInstance.post("/competitions", formData, {
         headers: {
@@ -312,20 +342,54 @@ export default function AddCompetition() {
                 />
               </div>
               <div>
-                <Label htmlFor="teamSize">Team Size *</Label>
-                <Input
-                  id="teamSize"
-                  type="number"
-                  min="1"
-                  value={competition.teamSize}
+                <Label htmlFor="type">Competition Type *</Label>
+                <select
+                  id="type"
+                  value={competition.type}
                   onChange={(e) =>
-                    handleCompetitionChange("teamSize", e.target.value)
+                    handleCompetitionChange("type", e.target.value)
                   }
-                  placeholder="Number of team members"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   required
-                />
+                >
+                  <option value="SOLO">Solo</option>
+                  <option value="TEAM">Team</option>
+                </select>
               </div>
             </div>
+
+            {competition.type === "TEAM" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="minTeamSize">Min Team Size *</Label>
+                  <Input
+                    id="minTeamSize"
+                    type="number"
+                    min="1"
+                    value={competition.minTeamSize || ""}
+                    onChange={(e) =>
+                      handleCompetitionChange("minTeamSize", e.target.value ? parseInt(e.target.value) : null)
+                    }
+                    placeholder="Minimum team members"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="maxTeamSize">Max Team Size *</Label>
+                  <Input
+                    id="maxTeamSize"
+                    type="number"
+                    min="1"
+                    value={competition.maxTeamSize || ""}
+                    onChange={(e) =>
+                      handleCompetitionChange("maxTeamSize", e.target.value ? parseInt(e.target.value) : null)
+                    }
+                    placeholder="Maximum team members"
+                    required
+                  />
+                </div>
+              </div>
+            )}
 
             <div>
               <Label htmlFor="description">Description *</Label>

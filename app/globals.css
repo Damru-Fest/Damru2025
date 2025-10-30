@@ -1,19 +1,17 @@
 @import "tailwindcss";
 
-
 @font-face {
-  font-family: 'WsParadose';
+  font-family: "WsParadose";
   src: url("/font/WsParadose.ttf");
 }
 
 @font-face {
-  font-family: 'Kamal';
+  font-family: "Kamal";
   src: url("/font/Kamal.ttf");
 }
- 
-body {
 
-  font-family: 'Kamal', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+body {
+  font-family: "Kamal", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, sans-serif;
   font-variant-numeric: lining-nums tabular-nums;
 }

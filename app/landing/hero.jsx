@@ -92,16 +92,16 @@
 //   )
 // }
 
-"use client"
+"use client";
 
-import Link from "next/link"
-import React, { useState, useEffect, useRef } from "react"
-import NavOverlay from "../../components/NavOverlay"
+import Link from "next/link";
+import React, { useState, useEffect, useRef } from "react";
+import NavOverlay from "../../components/NavOverlay";
 
 export default function Hero() {
-  const [open, setOpen] = useState(false)
-  const videoRef = useRef(null)
-  const [hasPlayed, setHasPlayed] = useState(false)
+  const [open, setOpen] = useState(false);
+  const videoRef = useRef(null);
+  const [hasPlayed, setHasPlayed] = useState(false);
 
   // useEffect(() => {
   //   const handleScroll = () => {
@@ -190,5 +190,5 @@ export default function Hero() {
       {/* Menu overlay (unchanged) */}
       <NavOverlay open={open} onClose={() => setOpen(false)} />
     </header>
-  )
+  );
 }
