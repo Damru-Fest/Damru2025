@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="60" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Damru logo">
+  <rect width="200" height="60" rx="8" fill="none" />
+  <g transform="translate(8,6)">
+    <circle cx="24" cy="24" r="20" fill="#F97316" />
+    <path d="M24 12c6 4 10 10 10 12s-4 8-10 12c-6-4-10-10-10-12s4-8 10-12z" fill="#FFF" opacity="0.95"/>
+    <text x="56" y="30" font-family="Inter, Arial, sans-serif" font-size="18" fill="#ffffff">Damru</text>
+  </g>
+</svg>
