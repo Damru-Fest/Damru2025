@@ -5,7 +5,8 @@ import React, { useState } from "react"
 export default function NavOverlay({ open = false, onClose = () => {} }) {
   const [hovered, setHovered] = useState(null)
   const [rotation, setRotation] = useState(0)
-  console.log(rotation);
+
+
   const items = [
     { href: "#home", label: "Home" },
     { href: "#about", label: "About Damru" },
@@ -114,7 +115,7 @@ export default function NavOverlay({ open = false, onClose = () => {} }) {
           <img
             src="/assets/fullwheel.svg"
             alt="decorative wheel"
-            className={`h-[520px] w-[520px] object-contain drop-shadow-2xl  transform transition-all  duration-700`}
+            className="h-[520px] w-[520px] object-contain drop-shadow-2xl transform transition-all  duration-700"
             style={{ rotate: `${rotation}deg` }}
           />
         </div>
