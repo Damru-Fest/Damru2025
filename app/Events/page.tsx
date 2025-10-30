@@ -1,22 +1,35 @@
 "use client"
 import { useState } from "react"
 import NavOverlay from "@/components/NavOverlay"
+import { useEffect } from "react";
+import AOS from "aos";
+import "aos/dist/aos.css";
 
 export default function Events() {
+     useEffect(() => {
+            AOS.init({
+              duration: 1000, // animation duration in ms
+              once: true, // whether animation should happen only once
+            });
+          }, []);
     const [open, setOpen] = useState(false)
     return(
         <div className="w-screen h-screen p-10" style={{background:'url("./assets/EventBg.svg")',backgroundSize:'cover',backgroundRepeat:'no-repeat'}}>
             <div className="flex flex-row justify-between  content-center items-center"> 
-                <a href="/"><img src="./assets/Damru-logo.svg" alt="" /></a>
-                <button className="flex  flex-row justify-center items-center bg-[#F99E00] p-1 h-15  w-60 gap-5 rounded-4xl">
-                    <img src="./assets/fullwheel.svg" alt="" />
+                <a href="/" data-aos="fade-right"><img src="./assets/Damru-logo.svg" alt="" /></a>
+                <button className="flex  flex-row justify-center items-center bg-[#F99E00] p-1 h-15  w-60 gap-5 rounded-4xl"
+                data-aos="fade-left">
+                    <img src="./assets/fullwheel.svg" alt="" 
+                    style={{ animation: 'spin 20s linear infinite' }}
+                    />
                     <h1 className="text-2xl text-black">Events</h1>
                 </button>
             </div>
+           
 
             {/* card */}
             <div className="flex flex-col content-center items-center justify-around" style={{height:'80vh'}}>
-                 <h1 className="md:text-9xl text-8xl text-amber-300 text-center">Coming Soon</h1>
+                 <h1 className="md:text-9xl text-8xl text-amber-300 text-center" data-aos="zoom-in">Coming Soon</h1>
 
 
             </div>
