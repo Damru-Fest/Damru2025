@@ -1,6 +1,10 @@
 @import "tailwindcss";
-@import "tw-animate-css";
 
+
+@font-face {
+  font-family: 'WsParadose';
+  src: url("/font/WsParadose.ttf");
+}
 
 @font-face {
   font-family: 'Kamal';
@@ -8,7 +12,8 @@
 }
  
 body {
-  font-family: 'Kamal',"Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+
+  font-family: "WsParadose", 'Kamal', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, sans-serif;
   font-variant-numeric: lining-nums tabular-nums;
 }

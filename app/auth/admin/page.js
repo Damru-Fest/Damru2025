@@ -30,8 +30,7 @@ export default function AdminAuthPage() {
       if (user.role === "ADMIN" || user.role === "DEV") {
         router.push("/admin");
       } else {
-        // User is logged in but not admin/dev, clear loading state
-        setIsLoading(false);
+        // User is logged in but not admin/dev. Button is enabled by default, so no synchronous setState here.
       }
     }
   }, [user, loading, router]);

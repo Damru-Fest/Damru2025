@@ -37,9 +37,9 @@ export default function Announcement(){
             }
         });
         if(any){
-            setPops(newPops);
-            const t = setTimeout(()=> setPops({days:false,hours:false,minutes:false}), 350);
-            return ()=> clearTimeout(t);
+            const t1 = setTimeout(()=> setPops(newPops), 0);
+            const t2 = setTimeout(()=> setPops({days:false,hours:false,minutes:false}), 350);
+            return ()=> { clearTimeout(t1); clearTimeout(t2); };
         }
         prev.current = timeLeft;
     },[timeLeft]);
