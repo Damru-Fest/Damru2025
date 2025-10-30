@@ -7,8 +7,8 @@ export default function Competitions() {
             </button>
 
             {/* card */}
-            <div className="flex flex-col h-screen w-screen content-center items-center justify-around">
-                 <h1 className="text-9xl text-amber-300">Coming Soon</h1>
+            <div className="flex flex-col content-center items-center justify-around" style={{height:'80vh'}}>
+                 <h1 className="md:text-9xl text-8xl text-amber-300 text-center">Coming Soon</h1>
 
 
             </div>

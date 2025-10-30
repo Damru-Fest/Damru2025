@@ -48,64 +48,65 @@ export default function Announcement(){
         <>
         <div className="bg-[#200808] w-screen overflow-hidden" style={{height:'90vh'}}>
             <div className="flex flex-row justify-between">
-                <img src="./assets/flowerImage.svg" className="relative -top-30" alt="flower" />
-                <div className="flex flex-col  items-center justify-center">
-                    <img src="/assets/Mask.svg"  className="w-40 mb-2" alt="" />
-                    <h1 className="text-4xl text-white">Join us on</h1>
-                </div>
-                <img src="./assets/RightFlower.svg" className="relative -top-30" alt="right flower" />
+                <img src="./assets/flowerImage.svg" className="relative sm:-top-30 -top-15 lg:w-auto sm:w-60 w-30" alt="flower" />
+               
+                <img src="./assets/RightFlower.svg" className="relative sm:-top-30 -top-15 sm:w-auto w-40" alt="right flower" />
                 
             </div>
-            <div className="ml-37 flex flex-col content-center relative -top-20 justify-center items-center gap-5" style={{width:'90vw'}}>
+            <div className="sm:ml-15 ml-5 lg:ml-30  flex flex-col content-center relative sm:-top-60 -top-30 justify-center items-center gap-5" style={{width:'90vw'}}>
+                    <div className="flex flex-col mb-5 items-center justify-center">
+                        <img src="/assets/Mask.svg"  className="w-40 mb-2" alt="" />
+                        <h1 className="sm:text-4xl text-2xl text-white">Join us on</h1>
+                    </div>
                 <h1 className="text-7xl  text-center text-white">28-29</h1>
                 <h1 className="text-7xl  text-center text-white">November</h1>
 
                 {/* Timer display matching the design */}
                 <div className="mt-10 w-screen justify-center relative flex flex-row">
+                
                     <div className="flex flex-col justify-center content-center items-center">
-                        <img src="/assets/Timer.svg" className="w-full mx-auto" alt="Timer" />
-                        <div className="mx-auto w-150 absolute inset-0 flex items-center justify-center mb-6 gap-30 pointer-events-none">
+                        <img src="/assets/Timer.svg" className="sm:w-100 w-90 lg:w-full mx-auto" alt="Timer" />
+                        <div className="mx-auto w-90 sm:w-150 absolute inset-0  flex items-center justify-center mb-6 sm:gap-24 gap-20 lg:gap-30 pointer-events-none">
                            
-                                 <TimerBox value={timeLeft.days}  pop={pops.days}  />
+                                 <TimerBox value={timeLeft.days}    />
                             
                            
-                                 <TimerBox value={timeLeft.hours}  pop={pops.hours}  />
+                                 <TimerBox value={timeLeft.hours}   />
                         
                            
                             
-                            <TimerBox value={timeLeft.minutes}  pop={pops.minutes} />
+                            <TimerBox value={timeLeft.minutes}  />
                         </div>
-                        <div className="w-full mx-auto flex flex-row justify-around text-red-600 text-2xl mt-2">
+                        <div className="sm:w-10/12 w-10/12 ml-5 flex flex-row justify-between content-center items-center  text-red-600 text-xl  sm:text-2xl mt-2">
                             <h1>Days</h1>
                             <h1>Hours</h1>
                             <h1>Minutes</h1>
                         </div>
                     </div>
-                    <img src="./assets/RightfullFlower.svg" className="absolute right-15 -top-50" alt="" />
+                    <img src="./assets/RightfullFlower.svg" className="absolute lg:right-5 right-5 -top-50 lg:w-100 w-0 sm:w-60" alt="" />
                     
                 </div>
 
                 
             </div>
-            <img src="./assets/LeftFlower.svg" className="relative -top-30" alt="right flower" />
+            <img src="./assets/LeftFlower.svg" className="relative lg:-top-60 sm:-top-40 -bottom-7 sm:w-auto w-40" alt="right flower" />
             
             
         </div>
 
         <style>{`
             .number { transition: transform 220ms cubic-bezier(.2,.8,.2,1); }
-            .pop { animation: pop 320ms ease; }
             @keyframes pop { 0%{ transform: scale(1); } 40%{ transform: scale(1.12); } 100%{ transform: scale(1); } }
         `}</style>
         </>
     )
 }
 
-function TimerBox({value, pop}:{value:number, pop:boolean}){
+function TimerBox({value}:{value:number}){
     // pad numbers
     const str = value < 10 ? String(value).padStart(2,'0') : String(value);
     return (
-        <div className={`number text-8xl text-white font-bold ${pop ? 'pop' : ''}`}>
+        <div className={`number text-4xl lg:text-8xl text-white font-bold`}>
             {str}
         </div>
     )
