@@ -32,26 +32,58 @@ import {
   Loader2,
 } from "lucide-react";
 
+interface Prize {
+  first?: string;
+  second?: string;
+  third?: string;
+}
+
+interface Stage {
+  id: number | string;
+  roundNumber: number;
+  roundTitle: string;
+  roundDesc: string;
+  startDate: string;
+  endDate: string;
+}
+
+interface Competition {
+  id: string;
+  title: string;
+  description: string;
+  registrationFee: number;
+  registrationDeadline: string;
+  teamSize: number;
+  otherRewards?: string;
+  detailsMdPath?: string;
+  prizes?: Prize;
+  stagesAndTimelines?: Stage[];
+}
+
+type StageStatus = "upcoming" | "active" | "completed";
+
 export default function CompetitionDetail() {
-  const params = useParams();
+  const params = useParams<{ id: string }>();
   const router = useRouter();
-  const [competition, setCompetition] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const [competition, setCompetition] = useState<Competition | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    if (params.id) {
+    if (params?.id) {
       fetchCompetition();
     }
-  }, [params.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params?.id]);
 
   const fetchCompetition = async () => {
     try {
       setLoading(true);
       const response = await axiosInstance.get(`/competitions/${params.id}`);
       setCompetition(response.data.competition);
-    } catch (error) {
+    } catch (error: any) {
       setError(error.response?.data?.message || "Failed to fetch competition");
       console.error("Error fetching competition:", error);
     } finally {
@@ -64,7 +96,7 @@ export default function CompetitionDetail() {
       setDeleteLoading(true);
       await axiosInstance.delete(`/competitions/${params.id}`);
       router.push("/admin/competitions");
-    } catch (error) {
+    } catch (error: any) {
       setError(error.response?.data?.message || "Failed to delete competition");
       console.error("Error deleting competition:", error);
     } finally {
@@ -72,7 +104,7 @@ export default function CompetitionDetail() {
     }
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
@@ -82,7 +114,7 @@ export default function CompetitionDetail() {
     });
   };
 
-  const formatDateOnly = (dateString) => {
+  const formatDateOnly = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
@@ -90,11 +122,11 @@ export default function CompetitionDetail() {
     });
   };
 
-  const isRegistrationOpen = (deadline) => {
+  const isRegistrationOpen = (deadline: string): boolean => {
     return new Date() < new Date(deadline);
   };
 
-  const getStageStatus = (startDate, endDate) => {
+  const getStageStatus = (startDate: string, endDate: string): StageStatus => {
     const now = new Date();
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -104,7 +136,7 @@ export default function CompetitionDetail() {
     return "completed";
   };
 
-  const getStatusIcon = (status) => {
+  const getStatusIcon = (status: StageStatus) => {
     switch (status) {
       case "upcoming":
         return <Clock className="h-4 w-4 text-yellow-600" />;
@@ -117,7 +149,7 @@ export default function CompetitionDetail() {
     }
   };
 
-  const getStatusBadgeVariant = (status) => {
+  const getStatusBadgeVariant = (status: StageStatus) => {
     switch (status) {
       case "upcoming":
         return "secondary";
@@ -171,11 +203,7 @@ export default function CompetitionDetail() {
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="font-semibold">Competition Not Found</p>
-              <Button
-                onClick={() => router.back()}
-                className="mt-4"
-                variant="outline"
-              >
+              <Button onClick={() => router.back()} className="mt-4" variant="outline">
                 Go Back
               </Button>
             </div>
@@ -228,8 +256,7 @@ export default function CompetitionDetail() {
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>
                   This action cannot be undone. This will permanently delete the
-                  competition &quot;{competition?.title}&quot; and remove all associated data
-                  including prizes and stages.
+                  competition "{competition.title}" and remove all associated data.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -394,8 +421,7 @@ export default function CompetitionDetail() {
 
                   return (
                     <div key={stage.id} className="relative">
-                      {/* Timeline connector */}
-                      {index < competition.stagesAndTimelines.length - 1 && (
+                      {index < (competition.stagesAndTimelines?.length ?? 0) - 1 && (
                         <div className="absolute left-6 top-12 w-0.5 h-16 bg-gray-200"></div>
                       )}
 
@@ -418,9 +444,7 @@ export default function CompetitionDetail() {
                             </Badge>
                           </div>
 
-                          <p className="text-gray-600 mb-3">
-                            {stage.roundDesc}
-                          </p>
+                          <p className="text-gray-600 mb-3">{stage.roundDesc}</p>
 
                           <div className="flex items-center gap-4 text-sm text-gray-600">
                             <span>Start: {formatDate(stage.startDate)}</span>
@@ -430,7 +454,7 @@ export default function CompetitionDetail() {
                         </div>
                       </div>
 
-                      {index < competition.stagesAndTimelines.length - 1 && (
+                      {index < (competition.stagesAndTimelines?.length ?? 0) - 1 && (
                         <Separator className="my-6" />
                       )}
                     </div>

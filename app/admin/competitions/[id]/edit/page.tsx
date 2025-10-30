@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,12 +19,40 @@ import {
   Loader2,
 } from "lucide-react";
 
+interface Prize {
+  first: string;
+  second: string;
+  third: string;
+}
+
+interface Stage {
+  id: number | null;
+  roundNumber: number;
+  roundTitle: string;
+  roundDesc: string;
+  startDate: string;
+  startTime: string;
+  endDate: string;
+  endTime: string;
+}
+
+interface Competition {
+  title: string;
+  description: string;
+  registrationFee: number;
+  registrationDeadline: string;
+  registrationTime: string;
+  teamSize: number;
+  otherRewards: string;
+  detailsMdPath: string;
+  imagePath?: string;
+}
+
 export default function EditCompetition() {
   const params = useParams();
   const router = useRouter();
 
-  // Competition basic info
-  const [competition, setCompetition] = useState({
+  const [competition, setCompetition] = useState<Competition>({
     title: "",
     description: "",
     registrationFee: 0,
@@ -35,22 +63,19 @@ export default function EditCompetition() {
     detailsMdPath: "",
   });
 
-  // Prizes
-  const [prizes, setPrizes] = useState({
+  const [prizes, setPrizes] = useState<Prize>({
     first: "",
     second: "",
     third: "",
   });
 
-  // File uploads
-  const [files, setFiles] = useState({
+  const [files, setFiles] = useState<{ detailsMd: File | null; image: File | null }>({
     detailsMd: null,
     image: null,
   });
 
-  // Stages
-  const [numStages, setNumStages] = useState(1);
-  const [stages, setStages] = useState([
+  const [numStages, setNumStages] = useState<number>(1);
+  const [stages, setStages] = useState<Stage[]>([
     {
       id: null,
       roundNumber: 1,
@@ -63,18 +88,16 @@ export default function EditCompetition() {
     },
   ]);
 
-  // Form state
-  const [loading, setLoading] = useState(false);
-  const [fetchLoading, setFetchLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [fetchLoading, setFetchLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<boolean>(false);
 
-  // Fetch existing competition data
   useEffect(() => {
-    if (params.id) {
+    if (params?.id) {
       fetchCompetition();
     }
-  }, [params.id]);
+  }, [params?.id]);
 
   const fetchCompetition = async () => {
     try {
@@ -82,12 +105,10 @@ export default function EditCompetition() {
       const response = await axiosInstance.get(`/competitions/${params.id}`);
       const competitionData = response.data.competition;
 
-      // Parse registration deadline
       const regDeadline = new Date(competitionData.registrationDeadline);
       const regDate = regDeadline.toISOString().split("T")[0];
       const regTime = regDeadline.toTimeString().slice(0, 5);
 
-      // Set competition basic info
       setCompetition({
         title: competitionData.title || "",
         description: competitionData.description || "",
@@ -97,9 +118,9 @@ export default function EditCompetition() {
         teamSize: competitionData.teamSize || 1,
         otherRewards: competitionData.otherRewards || "",
         detailsMdPath: competitionData.detailsMdPath || "",
+        imagePath: competitionData.imagePath || "",
       });
 
-      // Set prizes
       if (competitionData.prizes) {
         setPrizes({
           first: competitionData.prizes.first || "",
@@ -108,12 +129,8 @@ export default function EditCompetition() {
         });
       }
 
-      // Set stages
-      if (
-        competitionData.stagesAndTimelines &&
-        competitionData.stagesAndTimelines.length > 0
-      ) {
-        const stagesData = competitionData.stagesAndTimelines.map((stage) => {
+      if (competitionData.stagesAndTimelines?.length > 0) {
+        const stagesData: Stage[] = competitionData.stagesAndTimelines.map((stage: any) => {
           const startDateTime = new Date(stage.startDate);
           const endDateTime = new Date(stage.endDate);
 
@@ -132,45 +149,40 @@ export default function EditCompetition() {
         setStages(stagesData);
         setNumStages(stagesData.length);
       }
-    } catch (error) {
-      setError(error.response?.data?.message || "Failed to fetch competition");
-      console.error("Error fetching competition:", error);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to fetch competition");
+      console.error("Error fetching competition:", err);
     } finally {
       setFetchLoading(false);
     }
   };
 
-  // Handle competition field changes
-  const handleCompetitionChange = (field, value) => {
+  const handleCompetitionChange = (field: keyof Competition, value: string | number) => {
     setCompetition((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
 
-  // Handle prize changes
-  const handlePrizeChange = (position, value) => {
+  const handlePrizeChange = (position: keyof Prize, value: string) => {
     setPrizes((prev) => ({
       ...prev,
       [position]: value,
     }));
   };
 
-  // Handle file changes
-  const handleFileChange = (field, file) => {
+  const handleFileChange = (field: keyof typeof files, file: File | null) => {
     setFiles((prev) => ({
       ...prev,
       [field]: file,
     }));
   };
 
-  // Handle number of stages change
-  const handleNumStagesChange = (num) => {
+  const handleNumStagesChange = (num: string) => {
     const newNum = parseInt(num);
     setNumStages(newNum);
 
     if (newNum > stages.length) {
-      // Add new stages
       const newStages = [...stages];
       for (let i = stages.length; i < newNum; i++) {
         newStages.push({
@@ -186,43 +198,32 @@ export default function EditCompetition() {
       }
       setStages(newStages);
     } else if (newNum < stages.length) {
-      // Remove stages
       setStages(stages.slice(0, newNum));
     }
   };
 
-  // Handle stage changes
-  const handleStageChange = (index, field, value) => {
+  const handleStageChange = (index: number, field: keyof Stage, value: string | number) => {
     const newStages = [...stages];
-    newStages[index] = {
-      ...newStages[index],
-      [field]: value,
-    };
+    newStages[index] = { ...newStages[index], [field]: value as never };
     setStages(newStages);
   };
 
-  // Combine date and time for API
-  const combineDateTime = (date, time) => {
+  const combineDateTime = (date: string, time: string): Date | null => {
     if (!date || !time) return null;
     return new Date(`${date}T${time}`);
   };
 
-  // Validate form
-  const validateForm = () => {
+  const validateForm = (): string | null => {
     if (!competition.title.trim()) return "Title is required";
     if (!competition.description.trim()) return "Description is required";
-    if (!competition.registrationDeadline)
-      return "Registration deadline date is required";
-    if (!competition.registrationTime)
-      return "Registration deadline time is required";
+    if (!competition.registrationDeadline) return "Registration deadline date is required";
+    if (!competition.registrationTime) return "Registration deadline time is required";
     if (competition.teamSize < 1) return "Team size must be at least 1";
 
-    // Validate stages
     for (let i = 0; i < stages.length; i++) {
       const stage = stages[i];
       if (!stage.roundTitle.trim()) return `Stage ${i + 1} title is required`;
-      if (!stage.roundDesc.trim())
-        return `Stage ${i + 1} description is required`;
+      if (!stage.roundDesc.trim()) return `Stage ${i + 1} description is required`;
       if (!stage.startDate) return `Stage ${i + 1} start date is required`;
       if (!stage.startTime) return `Stage ${i + 1} start time is required`;
       if (!stage.endDate) return `Stage ${i + 1} end date is required`;
@@ -231,7 +232,7 @@ export default function EditCompetition() {
       const startDateTime = combineDateTime(stage.startDate, stage.startTime);
       const endDateTime = combineDateTime(stage.endDate, stage.endTime);
 
-      if (startDateTime >= endDateTime) {
+      if (startDateTime && endDateTime && startDateTime >= endDateTime) {
         return `Stage ${i + 1} end time must be after start time`;
       }
     }
@@ -239,8 +240,7 @@ export default function EditCompetition() {
     return null;
   };
 
-  // Handle form submission
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     const validationError = validateForm();
@@ -253,45 +253,25 @@ export default function EditCompetition() {
       setLoading(true);
       setError(null);
 
-      // Prepare FormData for file upload
       const formData = new FormData();
 
-      // Add basic competition data
       formData.append("title", competition.title);
       formData.append("description", competition.description);
-      formData.append(
-        "registrationFee",
-        parseFloat(competition.registrationFee)
-      );
-      formData.append("teamSize", parseInt(competition.teamSize));
+      formData.append("registrationFee", String(competition.registrationFee));
+      formData.append("teamSize", String(competition.teamSize));
       formData.append(
         "registrationDeadline",
-        combineDateTime(
-          competition.registrationDeadline,
-          competition.registrationTime
-        ).toISOString()
+        combineDateTime(competition.registrationDeadline, competition.registrationTime)?.toISOString() || ""
       );
 
-      if (competition.otherRewards) {
-        formData.append("otherRewards", competition.otherRewards);
-      }
-
-      // Add files if selected
-      if (files.detailsMd) {
-        formData.append("detailsMd", files.detailsMd);
-      }
-      if (files.image) {
-        formData.append("image", files.image);
-      }
-
-      // Add prizes if any
-      if (prizes.first || prizes.second || prizes.third) {
+      if (competition.otherRewards) formData.append("otherRewards", competition.otherRewards);
+      if (files.detailsMd) formData.append("detailsMd", files.detailsMd);
+      if (files.image) formData.append("image", files.image);
+      if (prizes.first || prizes.second || prizes.third)
         formData.append("prizes", JSON.stringify(prizes));
-      }
 
-      // Add stages
       const stagesData = stages.map((stage) => ({
-        id: stage.id, // Include existing ID for updates
+        id: stage.id,
         roundNumber: stage.roundNumber,
         roundTitle: stage.roundTitle,
         roundDesc: stage.roundDesc,
@@ -301,22 +281,23 @@ export default function EditCompetition() {
       formData.append("stagesAndTimelines", JSON.stringify(stagesData));
 
       await axiosInstance.put(`/competitions/${params.id}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        headers: { "Content-Type": "multipart/form-data" },
       });
-      setSuccess(true);
 
-      setTimeout(() => {
-        router.push("/admin/competitions");
-      }, 2000);
-    } catch (error) {
-      setError(error.response?.data?.message || "Failed to update competition");
-      console.error("Error updating competition:", error);
+      setSuccess(true);
+      setTimeout(() => router.push("/admin/competitions"), 2000);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to update competition");
+      console.error("Error updating competition:", err);
     } finally {
       setLoading(false);
     }
   };
+
+  // JSX below remains the same as your original component (no TS changes needed)
+  // — you can safely paste your JSX form part here.
+
+
 
   if (fetchLoading) {
     return (
@@ -498,7 +479,7 @@ export default function EditCompetition() {
                   type="file"
                   accept=".md,.markdown"
                   onChange={(e) =>
-                    handleFileChange("detailsMd", e.target.files[0])
+                    handleFileChange("detailsMd", e.target.files && e.target.files[0] ? e.target.files[0] : null)
                   }
                 />
                 <p className="text-sm text-gray-500 mt-1">
@@ -518,7 +499,7 @@ export default function EditCompetition() {
                   id="image"
                   type="file"
                   accept="image/*"
-                  onChange={(e) => handleFileChange("image", e.target.files[0])}
+                  onChange={(e) => handleFileChange("image", e.target.files && e.target.files[0] ? e.target.files[0] : null)}
                 />
                 <p className="text-sm text-gray-500 mt-1">
                   Upload a new banner image for the competition (optional)

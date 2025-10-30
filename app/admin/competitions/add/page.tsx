@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, FormEvent, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,14 +18,46 @@ import {
   CheckCircle,
 } from "lucide-react";
 
+interface Competition {
+  title: string;
+  description: string;
+  type: "SOLO" | "TEAM";
+  minTeamSize: number | null;
+  maxTeamSize: number | null;
+  registrationFee: number;
+  registrationDeadline: string;
+  registrationTime: string;
+  otherRewards: string;
+}
+
+interface Files {
+  detailsMd: File | null;
+  image: File | null;
+}
+
+interface Prizes {
+  first: string;
+  second: string;
+  third: string;
+}
+
+interface Stage {
+  roundNumber: number;
+  roundTitle: string;
+  roundDesc: string;
+  startDate: string;
+  startTime: string;
+  endDate: string;
+  endTime: string;
+}
+
 export default function AddCompetition() {
   const router = useRouter();
 
-  // Competition basic info
-  const [competition, setCompetition] = useState({
+  const [competition, setCompetition] = useState<Competition>({
     title: "",
     description: "",
-    type: "SOLO", // SOLO, TEAM
+    type: "SOLO",
     minTeamSize: null,
     maxTeamSize: null,
     registrationFee: 0,
@@ -34,22 +66,19 @@ export default function AddCompetition() {
     otherRewards: "",
   });
 
-  // File uploads
-  const [files, setFiles] = useState({
+  const [files, setFiles] = useState<Files>({
     detailsMd: null,
     image: null,
   });
 
-  // Prizes
-  const [prizes, setPrizes] = useState({
+  const [prizes, setPrizes] = useState<Prizes>({
     first: "",
     second: "",
     third: "",
   });
 
-  // Stages
-  const [numStages, setNumStages] = useState(1);
-  const [stages, setStages] = useState([
+  const [numStages, setNumStages] = useState<number>(1);
+  const [stages, setStages] = useState<Stage[]>([
     {
       roundNumber: 1,
       roundTitle: "",
@@ -61,57 +90,53 @@ export default function AddCompetition() {
     },
   ]);
 
-  // Form state
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<boolean>(false);
 
-  // Handle competition field changes
-  const handleCompetitionChange = (field, value) => {
+  const handleCompetitionChange = (field: keyof Competition, value: any) => {
     setCompetition((prev) => {
       const updated = {
         ...prev,
         [field]: value,
       };
-      
-      // Auto-adjust team sizes when type changes
+
       if (field === "type") {
         if (value === "SOLO") {
           updated.minTeamSize = null;
           updated.maxTeamSize = null;
-        } else if (value === "TEAM" && (prev.minTeamSize === null || prev.maxTeamSize === null)) {
+        } else if (
+          value === "TEAM" &&
+          (prev.minTeamSize === null || prev.maxTeamSize === null)
+        ) {
           updated.minTeamSize = 2;
           updated.maxTeamSize = 5;
         }
       }
-      
+
       return updated;
     });
   };
 
-  // Handle file changes
-  const handleFileChange = (field, file) => {
+  const handleFileChange = (field: keyof Files, file: File | null) => {
     setFiles((prev) => ({
       ...prev,
       [field]: file,
     }));
   };
 
-  // Handle prize changes
-  const handlePrizeChange = (position, value) => {
+  const handlePrizeChange = (position: keyof Prizes, value: string) => {
     setPrizes((prev) => ({
       ...prev,
       [position]: value,
     }));
   };
 
-  // Handle number of stages change
-  const handleNumStagesChange = (num) => {
+  const handleNumStagesChange = (num: string) => {
     const newNum = parseInt(num);
     setNumStages(newNum);
 
     if (newNum > stages.length) {
-      // Add new stages
       const newStages = [...stages];
       for (let i = stages.length; i < newNum; i++) {
         newStages.push({
@@ -126,13 +151,11 @@ export default function AddCompetition() {
       }
       setStages(newStages);
     } else if (newNum < stages.length) {
-      // Remove stages
       setStages(stages.slice(0, newNum));
     }
   };
 
-  // Handle stage changes
-  const handleStageChange = (index, field, value) => {
+  const handleStageChange = (index: number, field: keyof Stage, value: any) => {
     const newStages = [...stages];
     newStages[index] = {
       ...newStages[index],
@@ -141,28 +164,29 @@ export default function AddCompetition() {
     setStages(newStages);
   };
 
-  // Combine date and time for API
-  const combineDateTime = (date, time) => {
+  const combineDateTime = (date: string, time: string): Date | null => {
     if (!date || !time) return null;
     return new Date(`${date}T${time}`);
   };
 
-  // Validate form
-  const validateForm = () => {
+  const validateForm = (): string | null => {
     if (!competition.title.trim()) return "Title is required";
     if (!competition.description.trim()) return "Description is required";
     if (!competition.registrationDeadline)
       return "Registration deadline date is required";
     if (!competition.registrationTime)
       return "Registration deadline time is required";
-    // Team size validation only for TEAM type
     if (competition.type === "TEAM") {
-      if (!competition.minTeamSize || competition.minTeamSize < 1) return "Min team size must be at least 1 for team competitions";
-      if (!competition.maxTeamSize || competition.maxTeamSize < competition.minTeamSize) return "Max team size must be greater than or equal to min team size";
+      if (!competition.minTeamSize || competition.minTeamSize < 1)
+        return "Min team size must be at least 1 for team competitions";
+      if (
+        !competition.maxTeamSize ||
+        competition.maxTeamSize < competition.minTeamSize
+      )
+        return "Max team size must be greater than or equal to min team size";
     }
     if (!files.detailsMd) return "Markdown file is required";
 
-    // Validate stages
     for (let i = 0; i < stages.length; i++) {
       const stage = stages[i];
       if (!stage.roundTitle.trim()) return `Stage ${i + 1} title is required`;
@@ -176,7 +200,7 @@ export default function AddCompetition() {
       const startDateTime = combineDateTime(stage.startDate, stage.startTime);
       const endDateTime = combineDateTime(stage.endDate, stage.endTime);
 
-      if (startDateTime >= endDateTime) {
+      if (startDateTime && endDateTime && startDateTime >= endDateTime) {
         return `Stage ${i + 1} end time must be after start time`;
       }
     }
@@ -184,8 +208,7 @@ export default function AddCompetition() {
     return null;
   };
 
-  // Handle form submission
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     const validationError = validateForm();
@@ -198,37 +221,30 @@ export default function AddCompetition() {
       setLoading(true);
       setError(null);
 
-      // Prepare FormData for file upload
       const formData = new FormData();
 
-      // Add basic competition data
       formData.append("title", competition.title);
       formData.append("description", competition.description);
       formData.append("type", competition.type);
-      
-      // Only add team sizes for TEAM type competitions
+
       if (competition.type === "TEAM") {
-        formData.append("minTeamSize", parseInt(competition.minTeamSize));
-        formData.append("maxTeamSize", parseInt(competition.maxTeamSize));
+        formData.append("minTeamSize", String(competition.minTeamSize));
+        formData.append("maxTeamSize", String(competition.maxTeamSize));
       }
-      
-      formData.append(
-        "registrationFee",
-        parseFloat(competition.registrationFee)
+
+      formData.append("registrationFee", String(competition.registrationFee));
+      const deadline = combineDateTime(
+        competition.registrationDeadline,
+        competition.registrationTime
       );
-      formData.append(
-        "registrationDeadline",
-        combineDateTime(
-          competition.registrationDeadline,
-          competition.registrationTime
-        ).toISOString()
-      );
+      if (deadline) {
+        formData.append("registrationDeadline", deadline.toISOString());
+      }
 
       if (competition.otherRewards) {
         formData.append("otherRewards", competition.otherRewards);
       }
 
-      // Add files
       if (files.detailsMd) {
         formData.append("detailsMd", files.detailsMd);
       }
@@ -236,12 +252,10 @@ export default function AddCompetition() {
         formData.append("image", files.image);
       }
 
-      // Add prizes if any
       if (prizes.first || prizes.second || prizes.third) {
         formData.append("prizes", JSON.stringify(prizes));
       }
 
-      // Add stages - remove startTime and endTime as they're combined with dates
       const stagesData = stages.map((stage) => ({
         roundNumber: stage.roundNumber,
         roundTitle: stage.roundTitle,
@@ -249,19 +263,18 @@ export default function AddCompetition() {
         startDate: combineDateTime(stage.startDate, stage.startTime),
         endDate: combineDateTime(stage.endDate, stage.endTime),
       }));
+
       formData.append("stages", JSON.stringify(stagesData));
 
       await axiosInstance.post("/competitions", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        headers: { "Content-Type": "multipart/form-data" },
       });
-      setSuccess(true);
 
+      setSuccess(true);
       setTimeout(() => {
         router.push("/admin/competitions");
       }, 2000);
-    } catch (error) {
+    } catch (error: any) {
       setError(error.response?.data?.message || "Failed to create competition");
       console.error("Error creating competition:", error);
     } finally {
@@ -277,15 +290,14 @@ export default function AddCompetition() {
             <div className="text-center text-green-600">
               <CheckCircle className="h-12 w-12 mx-auto mb-4" />
               <p className="font-semibold text-lg">Competition Created!</p>
-              <p className="text-sm mt-2">
-                Redirecting to competitions list...
-              </p>
+              <p className="text-sm mt-2">Redirecting to competitions list...</p>
             </div>
           </CardContent>
         </Card>
       </div>
     );
   }
+
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -474,7 +486,7 @@ export default function AddCompetition() {
                   type="file"
                   accept=".md,.markdown"
                   onChange={(e) =>
-                    handleFileChange("detailsMd", e.target.files[0])
+                    handleFileChange("detailsMd", e.target.files && e.target.files[0] ? e.target.files[0] : null)
                   }
                   required
                 />
@@ -489,7 +501,7 @@ export default function AddCompetition() {
                   id="image"
                   type="file"
                   accept="image/*"
-                  onChange={(e) => handleFileChange("image", e.target.files[0])}
+                  onChange={(e) => handleFileChange("image", e.target.files && e.target.files[0] ? e.target.files[0] : null)}
                 />
                 <p className="text-sm text-gray-500 mt-1">
                   Upload a banner image for the competition (optional)
