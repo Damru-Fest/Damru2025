@@ -1,23 +1,36 @@
 "use client";
 
-import { useEffect } from "react";
+import React, { JSX, ReactNode, useEffect } from "react";
 import { useAuth } from "@/context/Auth";
 import { useRouter } from "next/navigation";
 
-export default function AdminLayout({ children }) {
-  const { user, loading } = useAuth();
+interface User {
+  id?: string;
+  name?: string;
+  email?: string;
+  role?: string;
+  [key: string]: any;
+}
+
+interface AdminLayoutProps {
+  children: ReactNode;
+}
+
+export default function AdminLayout({ children }: AdminLayoutProps): JSX.Element {
+  const { user, loading } = useAuth() as {
+    user: User | null;
+    loading: boolean;
+  };
   const router = useRouter();
 
   useEffect(() => {
     if (!loading) {
-      // If user is null (401 error) or doesn't have admin/dev role
       if (!user || (user.role !== "ADMIN" && user.role !== "DEV")) {
         router.push("/auth/admin");
       }
     }
   }, [user, loading, router]);
 
-  // Show loading while auth is being checked
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -26,7 +39,6 @@ export default function AdminLayout({ children }) {
     );
   }
 
-  // If no user or wrong role, show nothing (redirect is happening)
   if (!user || (user.role !== "ADMIN" && user.role !== "DEV")) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -35,6 +47,5 @@ export default function AdminLayout({ children }) {
     );
   }
 
-  // Only render children if user is authenticated and has correct role
   return <>{children}</>;
 }

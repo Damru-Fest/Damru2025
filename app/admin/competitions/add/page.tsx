@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState, FormEvent, ChangeEvent } from "react";
+import { useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,43 +16,70 @@ import {
   Save,
   AlertCircle,
   CheckCircle,
-  Loader2,
 } from "lucide-react";
 
-export default function EditCompetition() {
-  const params = useParams();
+interface Competition {
+  title: string;
+  description: string;
+  type: "SOLO" | "TEAM";
+  minTeamSize: number | null;
+  maxTeamSize: number | null;
+  registrationFee: number;
+  registrationDeadline: string;
+  registrationTime: string;
+  otherRewards: string;
+}
+
+interface Files {
+  detailsMd: File | null;
+  image: File | null;
+}
+
+interface Prizes {
+  first: string;
+  second: string;
+  third: string;
+}
+
+interface Stage {
+  roundNumber: number;
+  roundTitle: string;
+  roundDesc: string;
+  startDate: string;
+  startTime: string;
+  endDate: string;
+  endTime: string;
+}
+
+export default function AddCompetition() {
   const router = useRouter();
 
-  // Competition basic info
-  const [competition, setCompetition] = useState({
+  const [competition, setCompetition] = useState<Competition>({
     title: "",
     description: "",
+    type: "SOLO",
+    minTeamSize: null,
+    maxTeamSize: null,
     registrationFee: 0,
     registrationDeadline: "",
     registrationTime: "",
-    teamSize: 1,
     otherRewards: "",
-    detailsMdPath: "",
   });
 
-  // Prizes
-  const [prizes, setPrizes] = useState({
+  const [files, setFiles] = useState<Files>({
+    detailsMd: null,
+    image: null,
+  });
+
+  const [prizes, setPrizes] = useState<Prizes>({
     first: "",
     second: "",
     third: "",
   });
 
-  // File uploads
-  const [files, setFiles] = useState({
-    detailsMd: null,
-    image: null,
-  });
-
-  // Stages
-  const [numStages, setNumStages] = useState(1);
-  const [stages, setStages] = useState([
+  const [numStages, setNumStages] = useState<number>(1);
+  const [stages, setStages] = useState<Stage[]>([
     {
-      id: null,
       roundNumber: 1,
       roundTitle: "",
       roundDesc: "",
@@ -63,118 +90,56 @@ export default function EditCompetition() {
     },
   ]);
 
-  // Form state
-  const [loading, setLoading] = useState(false);
-  const [fetchLoading, setFetchLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<boolean>(false);
 
-  // Fetch existing competition data
-  useEffect(() => {
-    if (params.id) {
-      fetchCompetition();
-    }
-  }, [params.id]);
+  const handleCompetitionChange = (field: keyof Competition, value: any) => {
+    setCompetition((prev) => {
+      const updated = {
+        ...prev,
+        [field]: value,
+      };
 
-  const fetchCompetition = async () => {
-    try {
-      setFetchLoading(true);
-      const response = await axiosInstance.get(`/competitions/${params.id}`);
-      const competitionData = response.data.competition;
-
-      // Parse registration deadline
-      const regDeadline = new Date(competitionData.registrationDeadline);
-      const regDate = regDeadline.toISOString().split("T")[0];
-      const regTime = regDeadline.toTimeString().slice(0, 5);
-
-      // Set competition basic info
-      setCompetition({
-        title: competitionData.title || "",
-        description: competitionData.description || "",
-        registrationFee: competitionData.registrationFee || 0,
-        registrationDeadline: regDate,
-        registrationTime: regTime,
-        teamSize: competitionData.teamSize || 1,
-        otherRewards: competitionData.otherRewards || "",
-        detailsMdPath: competitionData.detailsMdPath || "",
-      });
-
-      // Set prizes
-      if (competitionData.prizes) {
-        setPrizes({
-          first: competitionData.prizes.first || "",
-          second: competitionData.prizes.second || "",
-          third: competitionData.prizes.third || "",
-        });
+      if (field === "type") {
+        if (value === "SOLO") {
+          updated.minTeamSize = null;
+          updated.maxTeamSize = null;
+        } else if (
+          value === "TEAM" &&
+          (prev.minTeamSize === null || prev.maxTeamSize === null)
+        ) {
+          updated.minTeamSize = 2;
+          updated.maxTeamSize = 5;
+        }
       }
 
-      // Set stages
-      if (
-        competitionData.stagesAndTimelines &&
-        competitionData.stagesAndTimelines.length > 0
-      ) {
-        const stagesData = competitionData.stagesAndTimelines.map((stage) => {
-          const startDateTime = new Date(stage.startDate);
-          const endDateTime = new Date(stage.endDate);
-
-          return {
-            id: stage.id,
-            roundNumber: stage.roundNumber,
-            roundTitle: stage.roundTitle || "",
-            roundDesc: stage.roundDesc || "",
-            startDate: startDateTime.toISOString().split("T")[0],
-            startTime: startDateTime.toTimeString().slice(0, 5),
-            endDate: endDateTime.toISOString().split("T")[0],
-            endTime: endDateTime.toTimeString().slice(0, 5),
-          };
-        });
-
-        setStages(stagesData);
-        setNumStages(stagesData.length);
-      }
-    } catch (error) {
-      setError(error.response?.data?.message || "Failed to fetch competition");
-      console.error("Error fetching competition:", error);
-    } finally {
-      setFetchLoading(false);
-    }
+      return updated;
+    });
   };
 
-  // Handle competition field changes
-  const handleCompetitionChange = (field, value) => {
-    setCompetition((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  // Handle prize changes
-  const handlePrizeChange = (position, value) => {
-    setPrizes((prev) => ({
-      ...prev,
-      [position]: value,
-    }));
-  };
-
-  // Handle file changes
-  const handleFileChange = (field, file) => {
+  const handleFileChange = (field: keyof Files, file: File | null) => {
     setFiles((prev) => ({
       ...prev,
       [field]: file,
     }));
   };
 
-  // Handle number of stages change
-  const handleNumStagesChange = (num) => {
+  const handlePrizeChange = (position: keyof Prizes, value: string) => {
+    setPrizes((prev) => ({
+      ...prev,
+      [position]: value,
+    }));
+  };
+
+  const handleNumStagesChange = (num: string) => {
     const newNum = parseInt(num);
     setNumStages(newNum);
 
     if (newNum > stages.length) {
-      // Add new stages
       const newStages = [...stages];
       for (let i = stages.length; i < newNum; i++) {
         newStages.push({
-          id: null,
           roundNumber: i + 1,
           roundTitle: "",
           roundDesc: "",
@@ -186,13 +151,11 @@ export default function EditCompetition() {
       }
       setStages(newStages);
     } else if (newNum < stages.length) {
-      // Remove stages
       setStages(stages.slice(0, newNum));
     }
   };
 
-  // Handle stage changes
-  const handleStageChange = (index, field, value) => {
+  const handleStageChange = (index: number, field: keyof Stage, value: any) => {
     const newStages = [...stages];
     newStages[index] = {
       ...newStages[index],
@@ -201,23 +164,29 @@ export default function EditCompetition() {
     setStages(newStages);
   };
 
-  // Combine date and time for API
-  const combineDateTime = (date, time) => {
+  const combineDateTime = (date: string, time: string): Date | null => {
     if (!date || !time) return null;
     return new Date(`${date}T${time}`);
   };
 
-  // Validate form
-  const validateForm = () => {
+  const validateForm = (): string | null => {
     if (!competition.title.trim()) return "Title is required";
     if (!competition.description.trim()) return "Description is required";
     if (!competition.registrationDeadline)
       return "Registration deadline date is required";
     if (!competition.registrationTime)
       return "Registration deadline time is required";
-    if (competition.teamSize < 1) return "Team size must be at least 1";
+    if (competition.type === "TEAM") {
+      if (!competition.minTeamSize || competition.minTeamSize < 1)
+        return "Min team size must be at least 1 for team competitions";
+      if (
+        !competition.maxTeamSize ||
+        competition.maxTeamSize < competition.minTeamSize
+      )
+        return "Max team size must be greater than or equal to min team size";
+    }
+    if (!files.detailsMd) return "Markdown file is required";
 
-    // Validate stages
     for (let i = 0; i < stages.length; i++) {
       const stage = stages[i];
       if (!stage.roundTitle.trim()) return `Stage ${i + 1} title is required`;
@@ -231,7 +200,7 @@ export default function EditCompetition() {
       const startDateTime = combineDateTime(stage.startDate, stage.startTime);
       const endDateTime = combineDateTime(stage.endDate, stage.endTime);
 
-      if (startDateTime >= endDateTime) {
+      if (startDateTime && endDateTime && startDateTime >= endDateTime) {
         return `Stage ${i + 1} end time must be after start time`;
       }
     }
@@ -239,8 +208,7 @@ export default function EditCompetition() {
     return null;
   };
 
-  // Handle form submission
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     const validationError = validateForm();
@@ -253,30 +221,30 @@ export default function EditCompetition() {
       setLoading(true);
       setError(null);
 
-      // Prepare FormData for file upload
       const formData = new FormData();
 
-      // Add basic competition data
       formData.append("title", competition.title);
       formData.append("description", competition.description);
-      formData.append(
-        "registrationFee",
-        parseFloat(competition.registrationFee)
+      formData.append("type", competition.type);
+
+      if (competition.type === "TEAM") {
+        formData.append("minTeamSize", String(competition.minTeamSize));
+        formData.append("maxTeamSize", String(competition.maxTeamSize));
+      }
+
+      formData.append("registrationFee", String(competition.registrationFee));
+      const deadline = combineDateTime(
+        competition.registrationDeadline,
+        competition.registrationTime
       );
-      formData.append("teamSize", parseInt(competition.teamSize));
-      formData.append(
-        "registrationDeadline",
-        combineDateTime(
-          competition.registrationDeadline,
-          competition.registrationTime
-        ).toISOString()
-      );
+      if (deadline) {
+        formData.append("registrationDeadline", deadline.toISOString());
+      }
 
       if (competition.otherRewards) {
         formData.append("otherRewards", competition.otherRewards);
       }
 
-      // Add files if selected
       if (files.detailsMd) {
         formData.append("detailsMd", files.detailsMd);
       }
@@ -284,50 +252,35 @@ export default function EditCompetition() {
         formData.append("image", files.image);
       }
 
-      // Add prizes if any
       if (prizes.first || prizes.second || prizes.third) {
         formData.append("prizes", JSON.stringify(prizes));
       }
 
-      // Add stages
       const stagesData = stages.map((stage) => ({
-        id: stage.id, // Include existing ID for updates
         roundNumber: stage.roundNumber,
         roundTitle: stage.roundTitle,
         roundDesc: stage.roundDesc,
         startDate: combineDateTime(stage.startDate, stage.startTime),
         endDate: combineDateTime(stage.endDate, stage.endTime),
       }));
-      formData.append("stagesAndTimelines", JSON.stringify(stagesData));
 
-      await axiosInstance.put(`/competitions/${params.id}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      formData.append("stages", JSON.stringify(stagesData));
+
+      await axiosInstance.post("/competitions", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
-      setSuccess(true);
 
+      setSuccess(true);
       setTimeout(() => {
         router.push("/admin/competitions");
       }, 2000);
-    } catch (error) {
-      setError(error.response?.data?.message || "Failed to update competition");
-      console.error("Error updating competition:", error);
+    } catch (error: any) {
+      setError(error.response?.data?.message || "Failed to create competition");
+      console.error("Error creating competition:", error);
     } finally {
       setLoading(false);
     }
   };
-
-  if (fetchLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p>Loading competition data...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (success) {
     return (
@@ -336,16 +289,15 @@ export default function EditCompetition() {
           <CardContent className="pt-6">
             <div className="text-center text-green-600">
               <CheckCircle className="h-12 w-12 mx-auto mb-4" />
-              <p className="font-semibold text-lg">Competition Updated!</p>
-              <p className="text-sm mt-2">
-                Redirecting to competitions list...
-              </p>
+              <p className="font-semibold text-lg">Competition Created!</p>
+              <p className="text-sm mt-2">Redirecting to competitions list...</p>
             </div>
           </CardContent>
         </Card>
       </div>
     );
   }
+
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -358,15 +310,17 @@ export default function EditCompetition() {
           className="flex items-center gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Competition
+          Back to Competitions
         </Button>
       </div>
 
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Edit Competition
+          Create New Competition
         </h1>
-        <p className="text-gray-600">Update the competition details</p>
+        <p className="text-gray-600">
+          Fill in the details to create a new competition
+        </p>
       </div>
 
       {error && (
@@ -400,20 +354,54 @@ export default function EditCompetition() {
                 />
               </div>
               <div>
-                <Label htmlFor="teamSize">Team Size *</Label>
-                <Input
-                  id="teamSize"
-                  type="number"
-                  min="1"
-                  value={competition.teamSize}
+                <Label htmlFor="type">Competition Type *</Label>
+                <select
+                  id="type"
+                  value={competition.type}
                   onChange={(e) =>
-                    handleCompetitionChange("teamSize", e.target.value)
+                    handleCompetitionChange("type", e.target.value)
                   }
-                  placeholder="Number of team members"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   required
-                />
+                >
+                  <option value="SOLO">Solo</option>
+                  <option value="TEAM">Team</option>
+                </select>
               </div>
             </div>
+
+            {competition.type === "TEAM" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="minTeamSize">Min Team Size *</Label>
+                  <Input
+                    id="minTeamSize"
+                    type="number"
+                    min="1"
+                    value={competition.minTeamSize || ""}
+                    onChange={(e) =>
+                      handleCompetitionChange("minTeamSize", e.target.value ? parseInt(e.target.value) : null)
+                    }
+                    placeholder="Minimum team members"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="maxTeamSize">Max Team Size *</Label>
+                  <Input
+                    id="maxTeamSize"
+                    type="number"
+                    min="1"
+                    value={competition.maxTeamSize || ""}
+                    onChange={(e) =>
+                      handleCompetitionChange("maxTeamSize", e.target.value ? parseInt(e.target.value) : null)
+                    }
+                    placeholder="Maximum team members"
+                    required
+                  />
+                </div>
+              </div>
+            )}
 
             <div>
               <Label htmlFor="description">Description *</Label>
@@ -491,43 +479,33 @@ export default function EditCompetition() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="detailsMd">
-                  Update Competition Rules (Markdown File)
+                  Competition Rules (Markdown File) *
                 </Label>
                 <Input
                   id="detailsMd"
                   type="file"
                   accept=".md,.markdown"
                   onChange={(e) =>
-                    handleFileChange("detailsMd", e.target.files[0])
+                    handleFileChange("detailsMd", e.target.files && e.target.files[0] ? e.target.files[0] : null)
                   }
+                  required
                 />
                 <p className="text-sm text-gray-500 mt-1">
-                  Upload a new .md or .markdown file to replace current rules
-                  (optional)
+                  Upload a .md or .markdown file with detailed competition rules
                 </p>
-                {competition.detailsMdPath && (
-                  <p className="text-sm text-blue-600 mt-1">
-                    Current: {competition.detailsMdPath}
-                  </p>
-                )}
               </div>
 
               <div>
-                <Label htmlFor="image">Update Competition Image</Label>
+                <Label htmlFor="image">Competition Image</Label>
                 <Input
                   id="image"
                   type="file"
                   accept="image/*"
-                  onChange={(e) => handleFileChange("image", e.target.files[0])}
+                  onChange={(e) => handleFileChange("image", e.target.files && e.target.files[0] ? e.target.files[0] : null)}
                 />
                 <p className="text-sm text-gray-500 mt-1">
-                  Upload a new banner image for the competition (optional)
+                  Upload a banner image for the competition (optional)
                 </p>
-                {competition.imagePath && (
-                  <p className="text-sm text-blue-600 mt-1">
-                    Current image exists
-                  </p>
-                )}
               </div>
             </div>
           </CardContent>
@@ -721,13 +699,13 @@ export default function EditCompetition() {
           >
             {loading ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Updating...
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Creating...
               </>
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                Update Competition
+                Create Competition
               </>
             )}
           </Button>

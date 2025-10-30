@@ -8,10 +8,26 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Users, Trophy, Eye, FileText } from "lucide-react";
 
+interface Prize {
+  first?: string;
+  second?: string;
+  third?: string;
+}
+
+interface Competition {
+  id: string;
+  title: string;
+  description: string;
+  registrationDeadline: string;
+  registrationFee: number;
+  teamSize?: number;
+  prizes?: Prize;
+}
+
 export default function Competitions() {
-  const [competitions, setCompetitions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [competitions, setCompetitions] = useState<Competition[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCompetitions();
@@ -22,7 +38,7 @@ export default function Competitions() {
       setLoading(true);
       const response = await axiosInstance.get("/competitions");
       setCompetitions(response.data.data);
-    } catch (error) {
+    } catch (error: any) {
       setError(error.response?.data?.message || "Failed to fetch competitions");
       console.error("Error fetching competitions:", error);
     } finally {
@@ -30,7 +46,7 @@ export default function Competitions() {
     }
   };
 
-  const formatDateTime = (dateString) => {
+  const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleString("en-US", {
       year: "numeric",
       month: "long",
@@ -41,7 +57,7 @@ export default function Competitions() {
     });
   };
 
-  const isRegistrationOpen = (deadline) => {
+  const isRegistrationOpen = (deadline: string) => {
     return new Date() < new Date(deadline);
   };
 
@@ -155,7 +171,9 @@ export default function Competitions() {
 
                   <div className="flex items-center text-sm text-gray-600">
                     <Users className="h-4 w-4 mr-2" />
-                    <span>Team Size: {competition.teamSize} members</span>
+                    <span>
+                      Team Size: {competition.teamSize ?? "N/A"} members
+                    </span>
                   </div>
 
                   {competition.registrationFee > 0 && (

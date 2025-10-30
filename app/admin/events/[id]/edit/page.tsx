@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,12 +18,38 @@ import {
   Loader2,
 } from "lucide-react";
 
+interface EventData {
+  title: string;
+  description: string;
+  queryEmail: string;
+  queryPhone: string;
+  startTime: string;
+  endTime: string;
+}
+
+interface FileData {
+  detailsMd: File | null;
+  image: File | null;
+}
+
+interface ApiResponse {
+  data: {
+    data: {
+      title?: string;
+      description?: string;
+      queryEmail?: string;
+      queryPhone?: string;
+      startTime?: string;
+      endTime?: string;
+    };
+  };
+}
+
 export default function EditEvent() {
-  const params = useParams();
+  const params = useParams<{ id: string }>();
   const router = useRouter();
 
-  // Event basic info
-  const [event, setEvent] = useState({
+  const [event, setEvent] = useState<EventData>({
     title: "",
     description: "",
     queryEmail: "",
@@ -32,48 +58,44 @@ export default function EditEvent() {
     endTime: "",
   });
 
-  // File uploads
-  const [files, setFiles] = useState({
+  const [files, setFiles] = useState<FileData>({
     detailsMd: null,
     image: null,
   });
 
-  // Form state
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // Fetch existing event data
   useEffect(() => {
-    if (params.id) {
+    if (params?.id) {
       fetchEvent();
     }
-  }, [params.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params?.id]);
 
   const fetchEvent = async () => {
     try {
       setFetchLoading(true);
-      const response = await axiosInstance.get(`/events/${params.id}`);
+      const response = await axiosInstance.get<ApiResponse>(`/events/${params.id}`);
       const eventData = response.data.data;
 
-      // Convert datetime to input format
-      const formatDateTimeForInput = (dateTimeString) => {
+      const formatDateTimeForInput = (dateTimeString?: string): string => {
         if (!dateTimeString) return "";
         const date = new Date(dateTimeString);
-        return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:MM
+        return date.toISOString().slice(0, 16);
       };
 
-      // Set event basic info
       setEvent({
-        title: eventData.title || "",
-        description: eventData.description || "",
-        queryEmail: eventData.queryEmail || "",
-        queryPhone: eventData.queryPhone || "",
-        startTime: formatDateTimeForInput(eventData.startTime),
-        endTime: formatDateTimeForInput(eventData.endTime),
+        title: eventData.data.title || "",
+        description: eventData.data.description || "",
+        queryEmail: eventData.data.queryEmail || "",
+        queryPhone: eventData.data.queryPhone || "",
+        startTime: formatDateTimeForInput(eventData.data.startTime),
+        endTime: formatDateTimeForInput(eventData.data.endTime),
       });
-    } catch (error) {
+    } catch (error: any) {
       setError(error.response?.data?.message || "Failed to fetch event");
       console.error("Error fetching event:", error);
     } finally {
@@ -81,32 +103,27 @@ export default function EditEvent() {
     }
   };
 
-  // Handle event field changes
-  const handleEventChange = (field, value) => {
+  const handleEventChange = (field: keyof EventData, value: string) => {
     setEvent((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
 
-  // Handle file changes
-  const handleFileChange = (field, file) => {
+  const handleFileChange = (field: keyof FileData, file: File | null) => {
     setFiles((prev) => ({
       ...prev,
       [field]: file,
     }));
   };
 
-  // Validate form
-  const validateForm = () => {
+  const validateForm = (): string | null => {
     if (!event.title.trim()) return "Title is required";
     if (!event.description.trim()) return "Description is required";
-
     return null;
   };
 
-  // Handle form submission
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const validationError = validateForm();
@@ -119,13 +136,11 @@ export default function EditEvent() {
       setLoading(true);
       setError(null);
 
-      // Prepare FormData for file upload (if files are provided)
       const hasFiles = files.detailsMd || files.image;
 
       if (hasFiles) {
         const formData = new FormData();
 
-        // Add basic event data
         formData.append("title", event.title);
         formData.append("description", event.description);
         formData.append("queryPhone", event.queryPhone || "");
@@ -133,7 +148,6 @@ export default function EditEvent() {
         formData.append("startTime", event.startTime || "");
         formData.append("endTime", event.endTime || "");
 
-        // Add files if provided
         if (files.detailsMd) {
           formData.append("detailsMd", files.detailsMd);
         }
@@ -147,7 +161,6 @@ export default function EditEvent() {
           },
         });
       } else {
-        // Send JSON data if no files
         await axiosInstance.put(`/events/${params.id}`, {
           title: event.title,
           description: event.description,
@@ -163,7 +176,7 @@ export default function EditEvent() {
       setTimeout(() => {
         router.push("/admin/events");
       }, 2000);
-    } catch (error) {
+    } catch (error: any) {
       setError(error.response?.data?.message || "Failed to update event");
       console.error("Error updating event:", error);
     } finally {
@@ -200,7 +213,6 @@ export default function EditEvent() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <Button
           variant="ghost"
@@ -240,7 +252,9 @@ export default function EditEvent() {
               <Input
                 id="title"
                 value={event.title}
-                onChange={(e) => handleEventChange("title", e.target.value)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  handleEventChange("title", e.target.value)
+                }
                 placeholder="Enter event title"
                 required
               />
@@ -251,7 +265,7 @@ export default function EditEvent() {
               <Textarea
                 id="description"
                 value={event.description}
-                onChange={(e) =>
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
                   handleEventChange("description", e.target.value)
                 }
                 placeholder="Describe the event"
@@ -267,7 +281,7 @@ export default function EditEvent() {
                   id="startTime"
                   type="datetime-local"
                   value={event.startTime}
-                  onChange={(e) =>
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     handleEventChange("startTime", e.target.value)
                   }
                 />
@@ -278,7 +292,9 @@ export default function EditEvent() {
                   id="endTime"
                   type="datetime-local"
                   value={event.endTime}
-                  onChange={(e) => handleEventChange("endTime", e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    handleEventChange("endTime", e.target.value)
+                  }
                 />
               </div>
             </div>
@@ -290,7 +306,7 @@ export default function EditEvent() {
                   id="queryEmail"
                   type="email"
                   value={event.queryEmail}
-                  onChange={(e) =>
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     handleEventChange("queryEmail", e.target.value)
                   }
                   placeholder="contact@example.com"
@@ -302,7 +318,7 @@ export default function EditEvent() {
                   id="queryPhone"
                   type="tel"
                   value={event.queryPhone}
-                  onChange={(e) =>
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     handleEventChange("queryPhone", e.target.value)
                   }
                   placeholder="+1234567890"
@@ -328,8 +344,11 @@ export default function EditEvent() {
                   id="detailsMd"
                   type="file"
                   accept=".md,.markdown"
-                  onChange={(e) =>
-                    handleFileChange("detailsMd", e.target.files[0])
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    handleFileChange(
+                      "detailsMd",
+                      e.target.files ? e.target.files[0] : null
+                    )
                   }
                 />
                 <p className="text-sm text-gray-500 mt-1">
@@ -343,7 +362,12 @@ export default function EditEvent() {
                   id="image"
                   type="file"
                   accept="image/*"
-                  onChange={(e) => handleFileChange("image", e.target.files[0])}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    handleFileChange(
+                      "image",
+                      e.target.files ? e.target.files[0] : null
+                    )
+                  }
                 />
                 <p className="text-sm text-gray-500 mt-1">
                   Upload a new image to replace existing banner (optional)
@@ -353,7 +377,6 @@ export default function EditEvent() {
           </CardContent>
         </Card>
 
-        {/* Submit Button */}
         <div className="flex justify-end gap-4">
           <Button type="button" variant="outline" onClick={() => router.back()}>
             Cancel
