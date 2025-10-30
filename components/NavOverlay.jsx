@@ -8,7 +8,7 @@ export default function NavOverlay({ open = false, onClose = () => {} }) {
 
 
   const items = [
-    { href: "#home", label: "Home" },
+    { href: "/", label: "Home" },
     { href: "/About", label: "About Damru" },
     { href: "/Events", label: "Events" },
     { href: "/Competitions", label: "Competitions" },

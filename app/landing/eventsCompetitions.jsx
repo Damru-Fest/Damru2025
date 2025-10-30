@@ -189,7 +189,7 @@ const EventsCompetitions = () => {
 
   // Function to handle the event redirect
   const handleEventVideoEnd = () => {
-    setIsVideoEnded(true);
+
     router.push("/Events");
     
   }
@@ -305,8 +305,10 @@ const EventsCompetitions = () => {
               <motion.div
                 layoutId="event-gate-animation" // ID for Event animation
                 onClick={() => {
-                  hasEventRedirectedRef.current = false // Reset flag on click
-                  setActiveGate('event')
+                  // hasEventRedirectedRef.current = false // Reset flag on click
+                  // setActiveGate('event')
+                   handleEventVideoEnd()
+
                 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.5 }}
@@ -331,8 +333,9 @@ const EventsCompetitions = () => {
               <motion.div
                 layoutId="competition-gate-animation" // NEW unique ID for Competition animation
                 onClick={() => {
-                  hasCompetitionRedirectedRef.current = false // Reset flag on click
-                  setActiveGate('competition')
+                  // hasCompetitionRedirectedRef.current = false // Reset flag on click
+                  // setActiveGate('competition')
+                  handleCompetitionVideoEnd ()
                 }}
                 exit={{ scale: 0.5, opacity: 0 }}
                 transition={{ duration: 0.5 }}
