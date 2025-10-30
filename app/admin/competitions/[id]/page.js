@@ -228,7 +228,7 @@ export default function CompetitionDetail() {
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>
                   This action cannot be undone. This will permanently delete the
-                  competition "{competition?.title}" and remove all associated data
+                  competition &quot;{competition?.title}&quot; and remove all associated data
                   including prizes and stages.
                 </AlertDialogDescription>
               </AlertDialogHeader>

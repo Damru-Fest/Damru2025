@@ -11,10 +11,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   ArrowLeft,
-  Plus,
-  Trash2,
-  Calendar,
-  Users,
   Trophy,
   Clock,
   Save,
@@ -34,7 +30,12 @@ export default function AddCompetition() {
     registrationTime: "",
     teamSize: 1,
     otherRewards: "",
-    detailsMdPath: "",
+  });
+
+  // File uploads
+  const [files, setFiles] = useState({
+    detailsMd: null,
+    image: null,
   });
 
   // Prizes
@@ -68,6 +69,14 @@ export default function AddCompetition() {
     setCompetition((prev) => ({
       ...prev,
       [field]: value,
+    }));
+  };
+
+  // Handle file changes
+  const handleFileChange = (field, file) => {
+    setFiles((prev) => ({
+      ...prev,
+      [field]: file,
     }));
   };
 
@@ -130,6 +139,7 @@ export default function AddCompetition() {
     if (!competition.registrationTime)
       return "Registration deadline time is required";
     if (competition.teamSize < 1) return "Team size must be at least 1";
+    if (!files.detailsMd) return "Markdown file is required";
 
     // Validate stages
     for (let i = 0; i < stages.length; i++) {
@@ -167,24 +177,55 @@ export default function AddCompetition() {
       setLoading(true);
       setError(null);
 
-      // Prepare data for API
-      const competitionData = {
-        ...competition,
-        registrationFee: parseFloat(competition.registrationFee),
-        teamSize: parseInt(competition.teamSize),
-        registrationDeadline: combineDateTime(
+      // Prepare FormData for file upload
+      const formData = new FormData();
+
+      // Add basic competition data
+      formData.append("title", competition.title);
+      formData.append("description", competition.description);
+      formData.append(
+        "registrationFee",
+        parseFloat(competition.registrationFee)
+      );
+      formData.append("teamSize", parseInt(competition.teamSize));
+      formData.append(
+        "registrationDeadline",
+        combineDateTime(
           competition.registrationDeadline,
           competition.registrationTime
-        ),
-        prizes: prizes.first || prizes.second || prizes.third ? prizes : null,
-        stagesAndTimelines: stages.map((stage) => ({
-          ...stage,
-          startDate: combineDateTime(stage.startDate, stage.startTime),
-          endDate: combineDateTime(stage.endDate, stage.endTime),
-        })),
-      };
+        ).toISOString()
+      );
 
-      await axiosInstance.post("/competitions", competitionData);
+      if (competition.otherRewards) {
+        formData.append("otherRewards", competition.otherRewards);
+      }
+
+      // Add files
+      if (files.detailsMd) {
+        formData.append("detailsMd", files.detailsMd);
+      }
+      if (files.image) {
+        formData.append("image", files.image);
+      }
+
+      // Add prizes if any
+      if (prizes.first || prizes.second || prizes.third) {
+        formData.append("prizes", JSON.stringify(prizes));
+      }
+
+      // Add stages
+      const stagesData = stages.map((stage) => ({
+        ...stage,
+        startDate: combineDateTime(stage.startDate, stage.startTime),
+        endDate: combineDateTime(stage.endDate, stage.endTime),
+      }));
+      formData.append("stagesAndTimelines", JSON.stringify(stagesData));
+
+      await axiosInstance.post("/competitions", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       setSuccess(true);
 
       setTimeout(() => {
@@ -359,16 +400,37 @@ export default function AddCompetition() {
               />
             </div>
 
-            <div>
-              <Label htmlFor="detailsMdPath">Details File Path</Label>
-              <Input
-                id="detailsMdPath"
-                value={competition.detailsMdPath}
-                onChange={(e) =>
-                  handleCompetitionChange("detailsMdPath", e.target.value)
-                }
-                placeholder="Path to detailed competition rules"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="detailsMd">
+                  Competition Rules (Markdown File) *
+                </Label>
+                <Input
+                  id="detailsMd"
+                  type="file"
+                  accept=".md,.markdown"
+                  onChange={(e) =>
+                    handleFileChange("detailsMd", e.target.files[0])
+                  }
+                  required
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Upload a .md or .markdown file with detailed competition rules
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="image">Competition Image</Label>
+                <Input
+                  id="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileChange("image", e.target.files[0])}
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Upload a banner image for the competition (optional)
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>

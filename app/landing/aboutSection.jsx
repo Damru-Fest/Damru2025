@@ -156,8 +156,8 @@ export default function AboutSection() {
           {/* UPDATED: 
             1. Changed 'text-lg' to 'text-base sm:text-lg' to make the font slightly smaller on very small screens.
           */}
-          <p className="text-center md:text-right text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed font-[Kamal] tracking-wide" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>
-            <span>Rishihood University's cultural heartbeat.</span><br />
+          <p className="text-center md:text-right text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed font-['Kamal'] tracking-wide" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>
+            <span>Rishihood University&apos;s cultural heartbeat.</span><br />
             Across two unforgettable days, the campus<br />
             comes alive with performances, battles, art,<br />
             and celebration. Join thousands of creators,<br />

@@ -160,7 +160,6 @@
 
 import React, { useState, useRef } from 'react'
 import Image from 'next/image'
-import Link from 'next/link' // This is imported but not used
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -388,7 +387,7 @@ const EventsCompetitions = () => {
             >
               <video
                 ref={competitionVideoRef}
-                src="/video/eventDoor.mp4"
+                src="/video/compDoor.mp4"
                 autoPlay
                 muted
                 playsInline
