@@ -16,7 +16,7 @@
 //         className="absolute left-0 w-full h-full object-cover z-10 pointer-events-none select-none opacity-12 top-10 md:top-20"
 //         style={{ zIndex: 90 }}
 //       />
-      
+
 //       {/* Gallery Card on left side (hidden on small screens) */}
 //       <div className="absolute left-6 md:left-12 lg:left-24 top-1/2 -translate-y-1/2 z-40 hidden md:block">
 //         <div className="relative">
@@ -44,10 +44,10 @@
 //             alt="Gallery Card"
 //             className="relative w-64 md:w-80 lg:w-120"
 //           />
-        
+
 //         </div>
 //           <button className="absolute text-2xl text-[#DB993D] -bottom-16 left-86   font-kamal px-8 py-2 rounded-full transition-colors border-2 border-[#DB993D]">
-//             Gallery 
+//             Gallery
 //           </button>
 //       </div>
 
@@ -80,8 +80,7 @@
 //   )
 // }
 
-
-import React from "react"
+import React from "react";
 
 export default function AboutSection() {
   return (
@@ -100,7 +99,7 @@ export default function AboutSection() {
         className="absolute left-0 w-full h-full object-cover z-10 pointer-events-none select-none opacity-12 top-10 md:top-20"
         style={{ zIndex: 90 }}
       />
-      
+
       {/* Gallery Card on left side (hidden on small screens) - NO CHANGES */}
       <div className="absolute left-6 md:left-12 lg:left-24 top-1/2 -translate-y-1/2 z-40 hidden md:block">
         <div className="relative">
@@ -125,19 +124,18 @@ export default function AboutSection() {
             alt="Gallery Card"
             className="relative w-64 md:w-80 lg:w-120"
           />
-        
         </div>
-          <button className="absolute text-2xl text-[#DB993D] -bottom-16 left-86   font-kamal px-8 py-2 rounded-full transition-colors border-2 border-[#DB993D]">
+        {/* <button className="absolute text-2xl text-[#DB993D] -bottom-16 left-86   font-kamal px-8 py-2 rounded-full transition-colors border-2 border-[#DB993D]">
             Gallery 
-          </button>
+          </button> */}
       </div>
 
       {/* Mobile-only Gallery CTA - NO CHANGES */}
-      <div className="md:hidden absolute bottom-6 left-1/2 -translate-x-1/2 z-40">
+      {/* <div className="md:hidden absolute bottom-6 left-1/2 -translate-x-1/2 z-40">
         <button className="text-xl text-[#DB993D] font-kamal px-6 py-2 rounded-full border-2 border-[#DB993D] bg-transparent">
           Gallery
         </button>
-      </div>
+      </div> */}
 
       {/* UPDATED: 
         1. Added 'pt-20 md:pt-0' to push content down on mobile, avoiding the top SVG.
@@ -156,17 +154,26 @@ export default function AboutSection() {
           {/* UPDATED: 
             1. Changed 'text-lg' to 'text-base sm:text-lg' to make the font slightly smaller on very small screens.
           */}
-          <p className="text-center md:text-right text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed font-['Kamal'] tracking-wide" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>
-            <span>Rishihood University&apos;s cultural heartbeat.</span><br />
-            Across two unforgettable days, the campus<br />
-            comes alive with performances, battles, art,<br />
-            and celebration. Join thousands of creators,<br />
-            dreamers, and culture lovers from Delhi NCR<br />
-            as Damru 2025 takes rhythm, creativity, and<br />
+          <p
+            className="text-center md:text-right text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed font-['Kamal'] tracking-wide"
+            style={{ textShadow: "2px 2px 4px rgba(0,0,0,0.5)" }}
+          >
+            <span>Rishihood University&apos;s cultural heartbeat.</span>
+            <br />
+            Across two unforgettable days, the campus
+            <br />
+            comes alive with performances, battles, art,
+            <br />
+            and celebration. Join thousands of creators,
+            <br />
+            dreamers, and culture lovers from Delhi NCR
+            <br />
+            as Damru 2025 takes rhythm, creativity, and
+            <br />
             community to the next level.
           </p>
         </div>
       </div>
     </section>
-  )
+  );
 }
