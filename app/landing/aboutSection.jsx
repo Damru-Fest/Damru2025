@@ -127,17 +127,17 @@ export default function AboutSection() {
           />
         
         </div>
-          <button className="absolute text-2xl text-[#DB993D] -bottom-16 left-86   font-kamal px-8 py-2 rounded-full transition-colors border-2 border-[#DB993D]">
+          {/* <button className="absolute text-2xl text-[#DB993D] -bottom-16 left-86   font-kamal px-8 py-2 rounded-full transition-colors border-2 border-[#DB993D]">
             Gallery 
-          </button>
+          </button> */}
       </div>
 
       {/* Mobile-only Gallery CTA - NO CHANGES */}
-      <div className="md:hidden absolute bottom-6 left-1/2 -translate-x-1/2 z-40">
+      {/* <div className="md:hidden absolute bottom-6 left-1/2 -translate-x-1/2 z-40">
         <button className="text-xl text-[#DB993D] font-kamal px-6 py-2 rounded-full border-2 border-[#DB993D] bg-transparent">
           Gallery
         </button>
-      </div>
+      </div> */}
 
       {/* UPDATED: 
         1. Added 'pt-20 md:pt-0' to push content down on mobile, avoiding the top SVG.
