@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, JSX } from "react";
 import { useAuth } from "@/context/Auth";
 import { useRouter } from "next/navigation";
 import {
@@ -14,23 +14,31 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Shield, Chrome } from "lucide-react";
 
-export default function AdminAuthPage() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+interface User {
+  id?: string;
+  name?: string;
+  email?: string;
+  role?: string;
+  [key: string]: any;
+}
 
-  const handleGoogleSignIn = () => {
+export default function AdminAuthPage(): JSX.Element {
+  const { user, loading } = useAuth() as {
+    user: User | null;
+    loading: boolean;
+  };
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const handleGoogleSignIn = (): void => {
     setIsLoading(true);
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
   };
 
   useEffect(() => {
     if (!loading && user) {
-      // If user is logged in, check their role
       if (user.role === "ADMIN" || user.role === "DEV") {
         router.push("/admin");
-      } else {
-        // User is logged in but not admin/dev. Button is enabled by default, so no synchronous setState here.
       }
     }
   }, [user, loading, router]);
@@ -104,7 +112,6 @@ export default function AdminAuthPage() {
             </p>
           </div>
 
-          {/* Additional info */}
           <div className="pt-4 border-t border-slate-700">
             <div className="text-xs text-slate-500 text-center space-y-1">
               <p>Secure authentication powered by Google OAuth</p>
