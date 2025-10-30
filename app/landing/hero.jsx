@@ -92,34 +92,34 @@
 //   )
 // }
 
-"use client"
+"use client";
 
-import Link from "next/link"
-import React, { useState, useEffect, useRef } from "react"
-import NavOverlay from "../../components/NavOverlay"
+import Link from "next/link";
+import React, { useState, useEffect, useRef } from "react";
+import NavOverlay from "../../components/NavOverlay";
 
 export default function Hero() {
-  const [open, setOpen] = useState(false)
-  const videoRef = useRef(null)
-  const [hasPlayed, setHasPlayed] = useState(false)
+  const [open, setOpen] = useState(false);
+  const videoRef = useRef(null);
+  const [hasPlayed, setHasPlayed] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      if (!videoRef.current) return
-      const scrollTop = window.scrollY
+      if (!videoRef.current) return;
+      const scrollTop = window.scrollY;
       if (scrollTop > 30 && !hasPlayed) {
-        videoRef.current.play()
-        setHasPlayed(true)
+        videoRef.current.play();
+        setHasPlayed(true);
       }
       if (scrollTop <= 10 && hasPlayed) {
-        videoRef.current.pause()
-        videoRef.current.currentTime = 0
-        setHasPlayed(false)
+        videoRef.current.pause();
+        videoRef.current.currentTime = 0;
+        setHasPlayed(false);
       }
-    }
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [hasPlayed])
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [hasPlayed]);
 
   return (
     <header className="relative w-full h-screen overflow-hidden bg-black">
@@ -190,5 +190,5 @@ export default function Hero() {
       {/* Menu overlay (unchanged) */}
       <NavOverlay open={open} onClose={() => setOpen(false)} />
     </header>
-  )
+  );
 }
