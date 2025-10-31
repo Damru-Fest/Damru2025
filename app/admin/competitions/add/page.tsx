@@ -17,7 +17,6 @@ import {
   Save,
   AlertCircle,
   CheckCircle,
-  Eye,
   X,
 } from "lucide-react";
 
@@ -31,6 +30,7 @@ interface Competition {
   registrationDeadline: string;
   registrationTime: string;
   otherRewards: string;
+  copoun: string;
 }
 
 interface Files {
@@ -67,6 +67,7 @@ export default function AddCompetition() {
     registrationDeadline: "",
     registrationTime: "",
     otherRewards: "",
+    copoun: "",
   });
 
   const [files, setFiles] = useState<Files>({
@@ -251,7 +252,7 @@ export default function AddCompetition() {
       formData.append("title", competition.title);
       formData.append("description", competition.description);
       formData.append("type", competition.type);
-
+      formData.append("copoun", competition.copoun);
       if (competition.type === "TEAM") {
         formData.append("minTeamSize", String(competition.minTeamSize));
         formData.append("maxTeamSize", String(competition.maxTeamSize));
@@ -479,6 +480,17 @@ export default function AddCompetition() {
                     )
                   }
                   required
+                />
+              </div>
+              <div>
+                <Label htmlFor="copoun">Copoun</Label>
+                <Input
+                  id="copoun"
+                  type="text"
+                  value={competition.copoun}
+                  onChange={(e) =>
+                    handleCompetitionChange("copoun", e.target.value)
+                  }
                 />
               </div>
               <div>

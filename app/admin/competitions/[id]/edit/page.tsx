@@ -49,6 +49,7 @@ interface Competition {
   otherRewards: string;
   detailsMdPath: string;
   imagePath?: string;
+  copoun?: string;
 }
 
 export default function EditCompetition() {
@@ -64,6 +65,7 @@ export default function EditCompetition() {
     teamSize: 1,
     otherRewards: "",
     detailsMdPath: "",
+    copoun: "",
   });
 
   const [prizes, setPrizes] = useState<Prize>({
@@ -128,6 +130,7 @@ export default function EditCompetition() {
         otherRewards: competitionData.otherRewards || "",
         detailsMdPath: competitionData.detailsMdPath || "",
         imagePath: competitionData.imagePath || "",
+        copoun: competition.copoun || "",
       });
 
       if (competitionData.prizes) {
@@ -324,6 +327,7 @@ export default function EditCompetition() {
       formData.append("description", competition.description);
       formData.append("registrationFee", String(competition.registrationFee));
       formData.append("teamSize", String(competition.teamSize));
+      formData.append("copoun", String(competition.copoun));
       formData.append(
         "registrationDeadline",
         combineDateTime(
@@ -517,6 +521,18 @@ export default function EditCompetition() {
                   value={competition.registrationTime}
                   onChange={(e) =>
                     handleCompetitionChange("registrationTime", e.target.value)
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="copoun">Copoun Time *</Label>
+                <Input
+                  id="copoun"
+                  type="time"
+                  value={competition.copoun}
+                  onChange={(e) =>
+                    handleCompetitionChange("copoun", e.target.value)
                   }
                   required
                 />
