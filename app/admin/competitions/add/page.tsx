@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import markdownToHtml from "@/lib/markdownToHtml";
 import {
   ArrowLeft,
   Trophy,
@@ -16,6 +17,8 @@ import {
   Save,
   AlertCircle,
   CheckCircle,
+  Eye,
+  X,
 } from "lucide-react";
 
 interface Competition {
@@ -93,6 +96,8 @@ export default function AddCompetition() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
+  const [mdPreview, setMdPreview] = useState<string>("");
+  const [imagePreview, setImagePreview] = useState<string>("");
 
   const handleCompetitionChange = (field: keyof Competition, value: any) => {
     setCompetition((prev) => {
@@ -123,6 +128,26 @@ export default function AddCompetition() {
       ...prev,
       [field]: file,
     }));
+
+    // Handle file previews
+    if (file) {
+      if (field === "detailsMd") {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setMdPreview(e.target?.result as string);
+        };
+        reader.readAsText(file);
+      } else if (field === "image") {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setImagePreview(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
+    } else {
+      if (field === "detailsMd") setMdPreview("");
+      if (field === "image") setImagePreview("");
+    }
   };
 
   const handlePrizeChange = (position: keyof Prizes, value: string) => {
@@ -290,14 +315,15 @@ export default function AddCompetition() {
             <div className="text-center text-green-600">
               <CheckCircle className="h-12 w-12 mx-auto mb-4" />
               <p className="font-semibold text-lg">Competition Created!</p>
-              <p className="text-sm mt-2">Redirecting to competitions list...</p>
+              <p className="text-sm mt-2">
+                Redirecting to competitions list...
+              </p>
             </div>
           </CardContent>
         </Card>
       </div>
     );
   }
-
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -380,7 +406,10 @@ export default function AddCompetition() {
                     min="1"
                     value={competition.minTeamSize || ""}
                     onChange={(e) =>
-                      handleCompetitionChange("minTeamSize", e.target.value ? parseInt(e.target.value) : null)
+                      handleCompetitionChange(
+                        "minTeamSize",
+                        e.target.value ? parseInt(e.target.value) : null
+                      )
                     }
                     placeholder="Minimum team members"
                     required
@@ -394,7 +423,10 @@ export default function AddCompetition() {
                     min="1"
                     value={competition.maxTeamSize || ""}
                     onChange={(e) =>
-                      handleCompetitionChange("maxTeamSize", e.target.value ? parseInt(e.target.value) : null)
+                      handleCompetitionChange(
+                        "maxTeamSize",
+                        e.target.value ? parseInt(e.target.value) : null
+                      )
                     }
                     placeholder="Maximum team members"
                     required
@@ -486,13 +518,39 @@ export default function AddCompetition() {
                   type="file"
                   accept=".md,.markdown"
                   onChange={(e) =>
-                    handleFileChange("detailsMd", e.target.files && e.target.files[0] ? e.target.files[0] : null)
+                    handleFileChange(
+                      "detailsMd",
+                      e.target.files && e.target.files[0]
+                        ? e.target.files[0]
+                        : null
+                    )
                   }
                   required
                 />
                 <p className="text-sm text-gray-500 mt-1">
                   Upload a .md or .markdown file with detailed competition rules
                 </p>
+                {files.detailsMd && (
+                  <div className="mt-2 space-y-2">
+                    <span className="text-sm text-green-600">
+                      ✓ {files.detailsMd.name}
+                    </span>
+                    {mdPreview && (
+                      <div className="mt-3">
+                        <p className="text-sm font-medium text-gray-700 mb-2">
+                          Preview:
+                        </p>
+                        <div className="prose prose-sm max-w-none bg-black p-3 rounded-md border max-h-48 overflow-y-auto">
+                          <div
+                            dangerouslySetInnerHTML={{
+                              __html: markdownToHtml(mdPreview),
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -501,11 +559,47 @@ export default function AddCompetition() {
                   id="image"
                   type="file"
                   accept="image/*"
-                  onChange={(e) => handleFileChange("image", e.target.files && e.target.files[0] ? e.target.files[0] : null)}
+                  onChange={(e) =>
+                    handleFileChange(
+                      "image",
+                      e.target.files && e.target.files[0]
+                        ? e.target.files[0]
+                        : null
+                    )
+                  }
                 />
                 <p className="text-sm text-gray-500 mt-1">
                   Upload a banner image for the competition (optional)
                 </p>
+                {imagePreview && (
+                  <div className="mt-2">
+                    <div className="relative inline-block">
+                      <img
+                        src={imagePreview}
+                        alt="Competition preview"
+                        className="max-w-full h-32 object-cover rounded-md border"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          handleFileChange("image", null);
+                          const input = document.getElementById(
+                            "image"
+                          ) as HTMLInputElement;
+                          if (input) input.value = "";
+                        }}
+                        className="absolute -top-2 -right-2 h-6 w-6 p-0"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <p className="text-sm text-green-600 mt-1">
+                      ✓ {files.image?.name}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>

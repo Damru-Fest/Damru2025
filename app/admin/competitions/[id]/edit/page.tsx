@@ -4,11 +4,13 @@ import { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import markdownToHtml from "@/lib/markdownToHtml";
 import {
   ArrowLeft,
   Trophy,
@@ -17,6 +19,7 @@ import {
   AlertCircle,
   CheckCircle,
   Loader2,
+  X,
 } from "lucide-react";
 
 interface Prize {
@@ -69,7 +72,10 @@ export default function EditCompetition() {
     third: "",
   });
 
-  const [files, setFiles] = useState<{ detailsMd: File | null; image: File | null }>({
+  const [files, setFiles] = useState<{
+    detailsMd: File | null;
+    image: File | null;
+  }>({
     detailsMd: null,
     image: null,
   });
@@ -92,6 +98,9 @@ export default function EditCompetition() {
   const [fetchLoading, setFetchLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
+  const [mdPreview, setMdPreview] = useState<string>("");
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [currentMdContent, setCurrentMdContent] = useState<string>("");
 
   useEffect(() => {
     if (params?.id) {
@@ -130,24 +139,31 @@ export default function EditCompetition() {
       }
 
       if (competitionData.stagesAndTimelines?.length > 0) {
-        const stagesData: Stage[] = competitionData.stagesAndTimelines.map((stage: any) => {
-          const startDateTime = new Date(stage.startDate);
-          const endDateTime = new Date(stage.endDate);
+        const stagesData: Stage[] = competitionData.stagesAndTimelines.map(
+          (stage: any) => {
+            const startDateTime = new Date(stage.startDate);
+            const endDateTime = new Date(stage.endDate);
 
-          return {
-            id: stage.id,
-            roundNumber: stage.roundNumber,
-            roundTitle: stage.roundTitle || "",
-            roundDesc: stage.roundDesc || "",
-            startDate: startDateTime.toISOString().split("T")[0],
-            startTime: startDateTime.toTimeString().slice(0, 5),
-            endDate: endDateTime.toISOString().split("T")[0],
-            endTime: endDateTime.toTimeString().slice(0, 5),
-          };
-        });
+            return {
+              id: stage.id,
+              roundNumber: stage.roundNumber,
+              roundTitle: stage.roundTitle || "",
+              roundDesc: stage.roundDesc || "",
+              startDate: startDateTime.toISOString().split("T")[0],
+              startTime: startDateTime.toTimeString().slice(0, 5),
+              endDate: endDateTime.toISOString().split("T")[0],
+              endTime: endDateTime.toTimeString().slice(0, 5),
+            };
+          }
+        );
 
         setStages(stagesData);
         setNumStages(stagesData.length);
+      }
+
+      // Load existing markdown content if available
+      if (competitionData.detailsMdPath) {
+        loadExistingMarkdown(competitionData.detailsMdPath);
       }
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to fetch competition");
@@ -157,7 +173,29 @@ export default function EditCompetition() {
     }
   };
 
-  const handleCompetitionChange = (field: keyof Competition, value: string | number) => {
+  const loadExistingMarkdown = async (mdPath: string) => {
+    try {
+      const response = await fetch("/api", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: mdPath }),
+      });
+      if (response.ok) {
+        const content = await response.text();
+
+        setCurrentMdContent(content);
+      }
+    } catch (error) {
+      console.error("Failed to load markdown content:", error);
+    }
+  };
+
+  const handleCompetitionChange = (
+    field: keyof Competition,
+    value: string | number
+  ) => {
     setCompetition((prev) => ({
       ...prev,
       [field]: value,
@@ -176,6 +214,26 @@ export default function EditCompetition() {
       ...prev,
       [field]: file,
     }));
+
+    // Handle file previews
+    if (file) {
+      if (field === "detailsMd") {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setMdPreview(e.target?.result as string);
+        };
+        reader.readAsText(file);
+      } else if (field === "image") {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setImagePreview(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
+    } else {
+      if (field === "detailsMd") setMdPreview("");
+      if (field === "image") setImagePreview("");
+    }
   };
 
   const handleNumStagesChange = (num: string) => {
@@ -202,7 +260,11 @@ export default function EditCompetition() {
     }
   };
 
-  const handleStageChange = (index: number, field: keyof Stage, value: string | number) => {
+  const handleStageChange = (
+    index: number,
+    field: keyof Stage,
+    value: string | number
+  ) => {
     const newStages = [...stages];
     newStages[index] = { ...newStages[index], [field]: value as never };
     setStages(newStages);
@@ -216,14 +278,17 @@ export default function EditCompetition() {
   const validateForm = (): string | null => {
     if (!competition.title.trim()) return "Title is required";
     if (!competition.description.trim()) return "Description is required";
-    if (!competition.registrationDeadline) return "Registration deadline date is required";
-    if (!competition.registrationTime) return "Registration deadline time is required";
+    if (!competition.registrationDeadline)
+      return "Registration deadline date is required";
+    if (!competition.registrationTime)
+      return "Registration deadline time is required";
     if (competition.teamSize < 1) return "Team size must be at least 1";
 
     for (let i = 0; i < stages.length; i++) {
       const stage = stages[i];
       if (!stage.roundTitle.trim()) return `Stage ${i + 1} title is required`;
-      if (!stage.roundDesc.trim()) return `Stage ${i + 1} description is required`;
+      if (!stage.roundDesc.trim())
+        return `Stage ${i + 1} description is required`;
       if (!stage.startDate) return `Stage ${i + 1} start date is required`;
       if (!stage.startTime) return `Stage ${i + 1} start time is required`;
       if (!stage.endDate) return `Stage ${i + 1} end date is required`;
@@ -261,10 +326,14 @@ export default function EditCompetition() {
       formData.append("teamSize", String(competition.teamSize));
       formData.append(
         "registrationDeadline",
-        combineDateTime(competition.registrationDeadline, competition.registrationTime)?.toISOString() || ""
+        combineDateTime(
+          competition.registrationDeadline,
+          competition.registrationTime
+        )?.toISOString() || ""
       );
 
-      if (competition.otherRewards) formData.append("otherRewards", competition.otherRewards);
+      if (competition.otherRewards)
+        formData.append("otherRewards", competition.otherRewards);
       if (files.detailsMd) formData.append("detailsMd", files.detailsMd);
       if (files.image) formData.append("image", files.image);
       if (prizes.first || prizes.second || prizes.third)
@@ -296,8 +365,6 @@ export default function EditCompetition() {
 
   // JSX below remains the same as your original component (no TS changes needed)
   // — you can safely paste your JSX form part here.
-
-
 
   if (fetchLoading) {
     return (
@@ -479,17 +546,56 @@ export default function EditCompetition() {
                   type="file"
                   accept=".md,.markdown"
                   onChange={(e) =>
-                    handleFileChange("detailsMd", e.target.files && e.target.files[0] ? e.target.files[0] : null)
+                    handleFileChange(
+                      "detailsMd",
+                      e.target.files && e.target.files[0]
+                        ? e.target.files[0]
+                        : null
+                    )
                   }
                 />
                 <p className="text-sm text-gray-500 mt-1">
                   Upload a new .md or .markdown file to replace current rules
                   (optional)
                 </p>
-                {competition.detailsMdPath && (
-                  <p className="text-sm text-blue-600 mt-1">
-                    Current: {competition.detailsMdPath}
-                  </p>
+                {competition.detailsMdPath && !files.detailsMd && (
+                  <div className="mt-2">
+                    {currentMdContent && (
+                      <div className="mt-3">
+                        <p className="text-sm font-medium text-gray-700 mb-2">
+                          Current Content:
+                        </p>
+                        <div className="prose prose-sm max-w-none bg-black p-3 rounded-md border max-h-48 overflow-y-auto">
+                          <div
+                            dangerouslySetInnerHTML={{
+                              __html: markdownToHtml(currentMdContent),
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {files.detailsMd && (
+                  <div className="mt-2 space-y-2">
+                    <span className="text-sm text-green-600">
+                      ✓ New file: {files.detailsMd.name}
+                    </span>
+                    {mdPreview && (
+                      <div className="mt-3">
+                        <p className="text-sm font-medium text-gray-700 mb-2">
+                          New File Preview:
+                        </p>
+                        <div className="prose prose-sm max-w-none bg-black p-3 rounded-md border max-h-48 overflow-y-auto">
+                          <div
+                            dangerouslySetInnerHTML={{
+                              __html: markdownToHtml(mdPreview),
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -499,15 +605,59 @@ export default function EditCompetition() {
                   id="image"
                   type="file"
                   accept="image/*"
-                  onChange={(e) => handleFileChange("image", e.target.files && e.target.files[0] ? e.target.files[0] : null)}
+                  onChange={(e) =>
+                    handleFileChange(
+                      "image",
+                      e.target.files && e.target.files[0]
+                        ? e.target.files[0]
+                        : null
+                    )
+                  }
                 />
                 <p className="text-sm text-gray-500 mt-1">
                   Upload a new banner image for the competition (optional)
                 </p>
-                {competition.imagePath && (
-                  <p className="text-sm text-blue-600 mt-1">
-                    Current image exists
-                  </p>
+                {competition.imagePath && !imagePreview && (
+                  <div className="mt-2">
+                    <p className="text-sm text-blue-600 mb-2">Current image:</p>
+                    <img
+                      src={`${competition.imagePath}`}
+                      alt="Current competition image"
+                      className="max-w-full h-32 object-cover rounded-md border"
+                    />
+                  </div>
+                )}
+                {imagePreview && (
+                  <div className="mt-2">
+                    <p className="text-sm text-green-600 mb-2">
+                      New image preview:
+                    </p>
+                    <div className="relative inline-block">
+                      <img
+                        src={imagePreview}
+                        alt="Competition preview"
+                        className="max-w-full h-32 object-cover rounded-md border"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          handleFileChange("image", null);
+                          const input = document.getElementById(
+                            "image"
+                          ) as HTMLInputElement;
+                          if (input) input.value = "";
+                        }}
+                        className="absolute -top-2 -right-2 h-6 w-6 p-0"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <p className="text-sm text-green-600 mt-1">
+                      ✓ {files.image?.name}
+                    </p>
+                  </div>
                 )}
               </div>
             </div>

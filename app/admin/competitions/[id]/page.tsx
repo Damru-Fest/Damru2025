@@ -18,6 +18,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import markdownToHtml from "@/lib/markdownToHtml";
 import {
   ArrowLeft,
   Calendar,
@@ -56,6 +57,7 @@ interface Competition {
   teamSize: number;
   otherRewards?: string;
   detailsMdPath?: string;
+  imagePath?: string;
   prizes?: Prize;
   stagesAndTimelines?: Stage[];
 }
@@ -70,6 +72,7 @@ export default function CompetitionDetail() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
+  const [markdownContent, setMarkdownContent] = useState<string>("");
 
   useEffect(() => {
     if (params?.id) {
@@ -82,12 +85,36 @@ export default function CompetitionDetail() {
     try {
       setLoading(true);
       const response = await axiosInstance.get(`/competitions/${params.id}`);
-      setCompetition(response.data.competition);
+      const competitionData = response.data.competition;
+      setCompetition(competitionData);
+
+      // Load markdown content if available
+      if (competitionData.detailsMdPath) {
+        loadMarkdownContent(competitionData.detailsMdPath);
+      }
     } catch (error: any) {
       setError(error.response?.data?.message || "Failed to fetch competition");
       console.error("Error fetching competition:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadMarkdownContent = async (mdPath: string) => {
+    try {
+      const response = await fetch("/api", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: mdPath }),
+      });
+      if (response.ok) {
+        const content = await response.text();
+        setMarkdownContent(content);
+      }
+    } catch (error) {
+      console.error("Failed to load markdown content:", error);
     }
   };
 
@@ -203,7 +230,11 @@ export default function CompetitionDetail() {
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="font-semibold">Competition Not Found</p>
-              <Button onClick={() => router.back()} className="mt-4" variant="outline">
+              <Button
+                onClick={() => router.back()}
+                className="mt-4"
+                variant="outline"
+              >
                 Go Back
               </Button>
             </div>
@@ -256,7 +287,8 @@ export default function CompetitionDetail() {
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>
                   This action cannot be undone. This will permanently delete the
-                  competition "{competition.title}" and remove all associated data.
+                  competition "{competition.title}" and remove all associated
+                  data.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -404,6 +436,47 @@ export default function CompetitionDetail() {
         </Card>
       )}
 
+      {/* Competition Image */}
+      {competition.imagePath && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Competition Image
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-center">
+              <img
+                src={`${competition.imagePath}`}
+                alt={competition.title}
+                className="max-w-full h-auto rounded-lg border shadow-sm"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Competition Details */}
+      {markdownContent && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Competition Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div
+              className="prose prose-sm max-w-none bg-black p-4 rounded-md border"
+              dangerouslySetInnerHTML={{
+                __html: markdownToHtml(markdownContent),
+              }}
+            />
+          </CardContent>
+        </Card>
+      )}
+
       {/* Stages and Timeline */}
       {competition.stagesAndTimelines &&
         competition.stagesAndTimelines.length > 0 && (
@@ -421,7 +494,8 @@ export default function CompetitionDetail() {
 
                   return (
                     <div key={stage.id} className="relative">
-                      {index < (competition.stagesAndTimelines?.length ?? 0) - 1 && (
+                      {index <
+                        (competition.stagesAndTimelines?.length ?? 0) - 1 && (
                         <div className="absolute left-6 top-12 w-0.5 h-16 bg-gray-200"></div>
                       )}
 
@@ -444,7 +518,9 @@ export default function CompetitionDetail() {
                             </Badge>
                           </div>
 
-                          <p className="text-gray-600 mb-3">{stage.roundDesc}</p>
+                          <p className="text-gray-600 mb-3">
+                            {stage.roundDesc}
+                          </p>
 
                           <div className="flex items-center gap-4 text-sm text-gray-600">
                             <span>Start: {formatDate(stage.startDate)}</span>
@@ -454,7 +530,8 @@ export default function CompetitionDetail() {
                         </div>
                       </div>
 
-                      {index < (competition.stagesAndTimelines?.length ?? 0) - 1 && (
+                      {index <
+                        (competition.stagesAndTimelines?.length ?? 0) - 1 && (
                         <Separator className="my-6" />
                       )}
                     </div>

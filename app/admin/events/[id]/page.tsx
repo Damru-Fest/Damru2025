@@ -5,8 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,27 +17,37 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import markdownToHtml from "@/lib/markdownToHtml";
 import {
   ArrowLeft,
   Calendar,
   Users,
-  Trophy,
   Clock,
-  DollarSign,
   FileText,
-  CheckCircle,
-  XCircle,
   Trash2,
   Loader2,
 } from "lucide-react";
 
+interface Event {
+  id: string;
+  title: string;
+  description: string;
+  startTime?: string;
+  endTime?: string;
+  queryEmail?: string;
+  queryPhone?: string;
+  detailsMdPath?: string;
+  imagePath?: string;
+}
+
 export default function EventDetail() {
-  const params = useParams();
+  const params = useParams<{ id: string }>();
   const router = useRouter();
-  const [event, setEvent] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [event, setEvent] = useState<Event | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
+  const [markdownContent, setMarkdownContent] = useState<string>("");
 
   useEffect(() => {
     if (params.id) {
@@ -50,12 +59,36 @@ export default function EventDetail() {
     try {
       setLoading(true);
       const response = await axiosInstance.get(`/events/${params.id}`);
-      setEvent(response.data.data);
-    } catch (error) {
+      const eventData = response.data.data;
+      setEvent(eventData);
+
+      // Load markdown content if available
+      if (eventData.detailsMdPath) {
+        loadMarkdownContent(eventData.detailsMdPath);
+      }
+    } catch (error: any) {
       setError(error.response?.data?.message || "Failed to fetch event");
       console.error("Error fetching event:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadMarkdownContent = async (mdPath: string) => {
+    try {
+      const response = await fetch("/api", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: mdPath }),
+      });
+      if (response.ok) {
+        const content = await response.text();
+        setMarkdownContent(content);
+      }
+    } catch (error) {
+      console.error("Failed to load markdown content:", error);
     }
   };
 
@@ -64,15 +97,15 @@ export default function EventDetail() {
       setDeleteLoading(true);
       await axiosInstance.delete(`/events/${params.id}`);
       router.push("/admin/events");
-    } catch (error) {
-      setError(error.response?.data?.message || "Failed to delete competition");
-      console.error("Error deleting competition:", error);
+    } catch (error: any) {
+      setError(error.response?.data?.message || "Failed to delete event");
+      console.error("Error deleting event:", error);
     } finally {
       setDeleteLoading(false);
     }
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
@@ -82,7 +115,7 @@ export default function EventDetail() {
     });
   };
 
-  const isRegistrationOpen = (deadline) => {
+  const isRegistrationOpen = (deadline: string): boolean => {
     return new Date() < new Date(deadline);
   };
 
@@ -266,21 +299,50 @@ export default function EventDetail() {
                 </div>
               </div>
             )}
-
-            {event.detailsMdPath && (
-              <div className="flex items-center gap-3">
-                <FileText className="h-5 w-5 text-purple-600" />
-                <div>
-                  <p className="text-sm text-gray-600">Details File</p>
-                  <p className="font-semibold text-sm break-all">
-                    {event.detailsMdPath}
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
+
+      {/* Event Image */}
+      {event.imagePath && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Event Image
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-center">
+              <img
+                src={`${event.imagePath}`}
+                alt={event.title}
+                className="max-w-full h-auto rounded-lg border shadow-sm"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Event Details */}
+      {markdownContent && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Event Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div
+              className="prose prose-sm max-w-none bg-black p-4 rounded-md border"
+              dangerouslySetInnerHTML={{
+                __html: markdownToHtml(markdownContent),
+              }}
+            />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

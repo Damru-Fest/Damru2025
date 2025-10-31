@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import markdownToHtml from "@/lib/markdownToHtml";
 import {
   ArrowLeft,
   Calendar,
@@ -16,6 +17,8 @@ import {
   AlertCircle,
   CheckCircle,
   Loader2,
+  Eye,
+  X,
 } from "lucide-react";
 
 interface EventData {
@@ -41,6 +44,8 @@ interface ApiResponse {
       queryPhone?: string;
       startTime?: string;
       endTime?: string;
+      detailsMdPath?: string;
+      imagePath?: string;
     };
   };
 }
@@ -67,6 +72,10 @@ export default function EditEvent() {
   const [fetchLoading, setFetchLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [mdPreview, setMdPreview] = useState<string>("");
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [currentMdContent, setCurrentMdContent] = useState<string>("");
+  const [currentImagePath, setCurrentImagePath] = useState<string>("");
 
   useEffect(() => {
     if (params?.id) {
@@ -78,8 +87,10 @@ export default function EditEvent() {
   const fetchEvent = async () => {
     try {
       setFetchLoading(true);
-      const response = await axiosInstance.get<ApiResponse>(`/events/${params.id}`);
-      const eventData = response.data.data;
+      const response = await axiosInstance.get<ApiResponse>(
+        `/events/${params.id}`
+      );
+      const eventData = response.data;
 
       const formatDateTimeForInput = (dateTimeString?: string): string => {
         if (!dateTimeString) return "";
@@ -95,11 +106,37 @@ export default function EditEvent() {
         startTime: formatDateTimeForInput(eventData.data.startTime),
         endTime: formatDateTimeForInput(eventData.data.endTime),
       });
+
+      // Load existing markdown and image paths if available
+      if (eventData.data.detailsMdPath) {
+        loadExistingMarkdown(eventData.data.detailsMdPath);
+      }
+      if (eventData.data.imagePath) {
+        setCurrentImagePath(eventData.data.imagePath);
+      }
     } catch (error: any) {
       setError(error.response?.data?.message || "Failed to fetch event");
       console.error("Error fetching event:", error);
     } finally {
       setFetchLoading(false);
+    }
+  };
+
+  const loadExistingMarkdown = async (mdPath: string) => {
+    try {
+      const response = await fetch("/api", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: mdPath }),
+      });
+      if (response.ok) {
+        const content = await response.text();
+        setCurrentMdContent(content);
+      }
+    } catch (error) {
+      console.error("Failed to load markdown content:", error);
     }
   };
 
@@ -115,6 +152,26 @@ export default function EditEvent() {
       ...prev,
       [field]: file,
     }));
+
+    // Handle file previews
+    if (file) {
+      if (field === "detailsMd") {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setMdPreview(e.target?.result as string);
+        };
+        reader.readAsText(file);
+      } else if (field === "image") {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setImagePreview(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
+    } else {
+      if (field === "detailsMd") setMdPreview("");
+      if (field === "image") setImagePreview("");
+    }
   };
 
   const validateForm = (): string | null => {
@@ -354,6 +411,46 @@ export default function EditEvent() {
                 <p className="text-sm text-gray-500 mt-1">
                   Upload a new .md file to replace existing details (optional)
                 </p>
+                {currentMdContent && !files.detailsMd && (
+                  <div className="mt-2">
+                    <p className="text-sm text-blue-600 mb-2">
+                      Current markdown exists
+                    </p>
+                    <div className="mt-3">
+                      <p className="text-sm font-medium text-gray-700 mb-2">
+                        Current Content:
+                      </p>
+                      <div className="prose prose-sm max-w-none bg-black p-3 rounded-md border max-h-48 overflow-y-auto">
+                        <div
+                          dangerouslySetInnerHTML={{
+                            __html: markdownToHtml(currentMdContent),
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {files.detailsMd && (
+                  <div className="mt-2 space-y-2">
+                    <span className="text-sm text-green-600">
+                      ✓ New file: {files.detailsMd.name}
+                    </span>
+                    {mdPreview && (
+                      <div className="mt-3">
+                        <p className="text-sm font-medium text-gray-700 mb-2">
+                          New File Preview:
+                        </p>
+                        <div className="prose prose-sm max-w-none bg-black p-3 rounded-md border max-h-48 overflow-y-auto">
+                          <div
+                            dangerouslySetInnerHTML={{
+                              __html: markdownToHtml(mdPreview),
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -372,6 +469,48 @@ export default function EditEvent() {
                 <p className="text-sm text-gray-500 mt-1">
                   Upload a new image to replace existing banner (optional)
                 </p>
+                {currentImagePath && !imagePreview && (
+                  <div className="mt-2">
+                    <p className="text-sm text-blue-600 mb-2">Current image:</p>
+                    <img
+                      src={`${currentImagePath}`}
+                      alt="Current event image"
+                      className="max-w-full h-32 object-cover rounded-md border"
+                    />
+                  </div>
+                )}
+                {imagePreview && (
+                  <div className="mt-2">
+                    <p className="text-sm text-green-600 mb-2">
+                      New image preview:
+                    </p>
+                    <div className="relative inline-block">
+                      <img
+                        src={imagePreview}
+                        alt="Event preview"
+                        className="max-w-full h-32 object-cover rounded-md border"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          handleFileChange("image", null);
+                          const input = document.getElementById(
+                            "image"
+                          ) as HTMLInputElement;
+                          if (input) input.value = "";
+                        }}
+                        className="absolute -top-2 -right-2 h-6 w-6 p-0"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <p className="text-sm text-green-600 mt-1">
+                      ✓ {files.image?.name}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>
